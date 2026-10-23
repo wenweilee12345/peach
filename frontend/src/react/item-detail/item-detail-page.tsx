@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 作品详情（ADR-0031）：舞台里那一整块——播放区、右侧队列、侧栏与下方的「接着看」。
  *
  * 舞台（`<dialog id="stage">`）、它的进出场、小窗与 Video.js 都归舞台岛（`../stage/`），关注详情
@@ -54,7 +55,7 @@ const Glyph = ({ name }: { name: string }) => (
 const Html = ({ html }: { html: string }) => <span className="contents" dangerouslySetInnerHTML={{ __html: html }} />;
 
 /** 文件大小：没记下或记成 0 的写「大小未知」，同卡片上那一格。 */
-const sizeText = (size: unknown) => (Number(size) > 0 ? fmtSize(Number(size)) : '大小未知');
+const sizeText = (size: unknown) => (Number(size) > 0 ? fmtSize(Number(size)) : t('大小未知'));
 
 export function ItemDetailPage(props: ItemDetailProps) {
   const { queue: ref, actions } = props;
@@ -89,7 +90,7 @@ export function ItemDetailPage(props: ItemDetailProps) {
 
 /** 关闭键。`id` 留着：Escape、点浮窗外面与壳的兜底都按 `#closeStage` 找它再点一下。 */
 const CloseStage = ({ onClose }: { onClose(): void }) => (
-  <button type="button" data-stage-close="" id="closeStage" title="关闭" aria-label="关闭" onClick={onClose}
+  <button type="button" data-stage-close="" id="closeStage" title={t('关闭')} aria-label={t('关闭')} onClick={onClose}
     dangerouslySetInnerHTML={{ __html: icon('x') }} />
 );
 
@@ -183,22 +184,22 @@ function MediaFrame({ item, gate, helpers, actions, autoplay, onEnded }: {
             source={samples.find(sample => sample.index === (entry.index === -2 ? media[0]!.index : entry.index))?.source} thumbnail />} />
       </> : null}
       {item.is_jav && item.code && !item.sample_images?.length && (source.isPending || source.error || source.data?.state === 'partial') ?
-        <div data-item-samples-state="">{source.isPending ? <span data-skeleton="samples" role="status" aria-label="正在读取样图" className="relative block h-12 w-20 skeleton-sheen" />
+        <div data-item-samples-state="">{source.isPending ? <span data-skeleton="samples" role="status" aria-label={t('正在读取样图')} className="relative block h-12 w-20 skeleton-sheen" />
           : <Button variant="secondary" {...busyProps(source.isFetching)} title={source.data?.message || requestErrorMessage(source.error)}
-            onClick={() => { refreshSamples.current = true; void source.refetch() }}>重试样图</Button>}</div> : null}
+            onClick={() => { refreshSamples.current = true; void source.refetch() }}>{t('重试样图')}</Button>}</div> : null}
       {gate === 'offline' ? <OfflineGate item={item} badge={badge} helpers={helpers} actions={actions} />
         : gate === 'disc' ? (
           <div role="status" data-item-gate="disc">
-            <b>ISO 原盘</b>
-            <span>请使用支持原盘的外部播放器打开。</span>
+            <b>{t('ISO 原盘')}</b>
+            <span>{t('请使用支持原盘的外部播放器打开。')}</span>
             <ExternalPlayback id={item.id} />
           </div>
         ) : gate === 'online' ? (
           <div id="onlineGate" role="status" data-item-gate="online">
             <Html html={badge} />
-            <b>在线作品</b>
-            <span>这条没有对应的关注条目，媒体地址无从解析。</span>
-            <button className="chip" id="openSavedFollow" type="button" onClick={actions.openSavedFollow}>打开已保存关注</button>
+            <b>{t('在线作品')}</b>
+            <span>{t('这条没有对应的关注条目，媒体地址无从解析。')}</span>
+            <button className="chip" id="openSavedFollow" type="button" onClick={actions.openSavedFollow}>{t('打开已保存关注')}</button>
           </div>
         ) : gate === 'metered' && !started ? (
           <div id="gate" data-item-gate="metered" onClick={() => setStarted('clicked')}>
@@ -225,7 +226,7 @@ function OfflineGate({ item, badge, helpers, actions }: {
   return (
     <div id="offlineGate" role="status" data-item-gate="offline">
       <Html html={badge} />
-      <b>媒体目录无法访问</b>
+      <b>{t('媒体目录无法访问')}</b>
       <span>{helpers.offlineReason(item.location || '')}</span>
       <button className="chip" id="offlineRetry" type="button" disabled={checking} onClick={() => void retry()}>
         {still ? '仍无法读取 · 刷新' : '刷新状态'}
@@ -259,10 +260,10 @@ function Queue({ queue, itemId, helpers, actions }: {
   }, [helpers, queue.kind]);
   const saveMix = useSaveMix(queue, actions);
   const head = queue.kind === 'mix'
-    ? <button type="button" data-save-mix="" title="保存为播放列表" aria-label="保存为播放列表" onClick={saveMix}
+    ? <button type="button" data-save-mix="" title={t('保存为播放列表')} aria-label={t('保存为播放列表')} onClick={saveMix}
       dangerouslySetInnerHTML={{ __html: icon('playlist') }} />
     : queue.kind === 'playlist'
-      ? <button type="button" data-edit-playlist="" title="编辑播放列表" aria-label="编辑播放列表" onClick={actions.editPlaylist}
+      ? <button type="button" data-edit-playlist="" title={t('编辑播放列表')} aria-label={t('编辑播放列表')} onClick={actions.editPlaylist}
         dangerouslySetInnerHTML={{ __html: icon('playlist') }} />
       : null;
   const ref = { kind: queue.kind, seedId: queue.seedId, playlistId: queue.playlistId };
@@ -283,7 +284,7 @@ function Queue({ queue, itemId, helpers, actions }: {
             after={queue.kind === 'playlist' ? (
               <span data-queue-edit="">
                 <i data-queue-grip="" aria-hidden="true"><Glyph name="grip-vertical" /></i>
-                <button type="button" data-queue-remove={row.id} title="移出播放列表" aria-label="移出播放列表"
+                <button type="button" data-queue-remove={row.id} title={t('移出播放列表')} aria-label={t('移出播放列表')}
                   onClick={() => reorder.remove(row.id)}><Glyph name="x" /></button>
               </span>
             ) : null}>
@@ -399,28 +400,28 @@ function Side({ item, queue, write, helpers, actions }: {
         <Trace item={item} />
         {item.medium === 'video' && item.location !== 'online' ? <ExternalPlayback key={item.id} id={item.id} /> : null}
         <div data-stage-actions="" data-item-feedback="">
-          <button type="button" id="likeBtn" data-fb="like" aria-label={item.liked ? '取消喜欢' : '喜欢'} title="喜欢 · 记录口味偏好"
+          <button type="button" id="likeBtn" data-fb="like" aria-label={item.liked ? '取消喜欢' : '喜欢'} title={t('喜欢 · 记录口味偏好')}
             aria-pressed={!!item.liked} {...busy('like')} onClick={() => write.preference({ liked: !item.liked })}><Glyph name="thumbs-up" /></button>
-          <button type="button" id="preferenceToggle" data-fb="reason" aria-label="喜爱理由" title="喜爱理由" aria-expanded={reasonOpen}
+          <button type="button" id="preferenceToggle" data-fb="reason" aria-label={t('喜爱理由')} title={t('喜爱理由')} aria-expanded={reasonOpen}
             aria-controls="preferencePanel" data-has-reason={String(!!item.like_reason)}
             onClick={() => setReasonOpen((open) => !open)}><Glyph name="notebook-pen" /></button>
-          <button type="button" data-stage-action="dislike" data-kind="dislike" aria-label="不合口味" title="不合口味 · 降低推荐权重"
+          <button type="button" data-stage-action="dislike" data-kind="dislike" aria-label={t('不合口味')} title={t('不合口味 · 降低推荐权重')}
             aria-pressed={item.feedback === 'dislike'} {...busy('dislike')} onClick={() => write.feedback('dislike')}><Glyph name="thumbs-down" /></button>
-          <button type="button" data-stage-action="seen" data-kind="seen" aria-label="看过了" title="看过了 · 只降低近期推荐"
+          <button type="button" data-stage-action="seen" data-kind="seen" aria-label={t('看过了')} title={t('看过了 · 只降低近期推荐')}
             aria-pressed={item.feedback === 'seen'} {...busy('seen')} onClick={() => write.feedback('seen')}><Glyph name="eye" /></button>
-          <button type="button" data-stage-action="later" id="stageLater" aria-label="稍后看" title="稍后看 · 加入或移出队列"
+          <button type="button" data-stage-action="later" id="stageLater" aria-label={t('稍后看')} title={t('稍后看 · 加入或移出队列')}
             aria-pressed={!!item.watch_later} {...busy('later')} onClick={write.later}><Glyph name={item.watch_later ? 'check' : 'bookmark-plus'} /></button>
-          <button type="button" id="addPlaylist" data-fb="playlist" aria-label="加入播放列表" title="加入播放列表"
+          <button type="button" id="addPlaylist" data-fb="playlist" aria-label={t('加入播放列表')} title={t('加入播放列表')}
             onClick={() => actions.addToPlaylist(item)}><Glyph name="playlist" /></button>
-          <button type="button" id="betterVersion" data-fb="quality" aria-label="寻找更好版本"
+          <button type="button" id="betterVersion" data-fb="quality" aria-label={t('寻找更好版本')}
             title={item.better_version ? (item.better_version_reason || '已标记寻找更好版本') : '寻找高清、无水印或完整版'}
             aria-pressed={!!item.better_version} {...busy('quality')} onClick={write.quality}><Glyph name="sparkles" /></button>
-          <button type="button" data-kind="dispose" data-fb="dispose" aria-label="移入回收站" title="移入回收站 · 文件仍保留，可从回收站永久清除"
+          <button type="button" data-kind="dispose" data-fb="dispose" aria-label={t('移入回收站')} title={t('移入回收站 · 文件仍保留，可从回收站永久清除')}
             aria-pressed={item.disposal === 'trash'} {...busy('dispose')} onClick={() => write.feedback('dispose')}><Glyph name="trash" /></button>
         </div>
         <Preference item={item} open={reasonOpen} write={write} />
         <button type="button" data-kind="o" {...busy('o')} onClick={() => write.feedback('o')}>
-          <Glyph name="sperm" /><span>记一次高潮</span><b className="mono" id="oCount">{item.o_count || 0}</b>
+          <Glyph name="sperm" /><span>{t('记一次高潮')}</span><b className="mono" id="oCount">{item.o_count || 0}</b>
         </button>
       </div>
     </div>
@@ -488,10 +489,10 @@ function SourceTools({ id, actions, onStatus }: { id: number; actions: ItemDetai
   };
   return (
     <>
-      <button type="button" data-reveal={id} title="在文件管理器里打开源文件所在目录" aria-label="定位源文件"
+      <button type="button" data-reveal={id} title={t('在文件管理器里打开源文件所在目录')} aria-label={t('定位源文件')}
         {...(busy === 'reveal' ? { 'aria-busy': true, 'aria-disabled': true } : {})} onClick={() => void reveal()}
         dangerouslySetInnerHTML={{ __html: busy === 'reveal' ? spinnerHtml('正在定位') : icon('folder-open') }} />
-      <button type="button" data-sync={id} title="核对该目录：磁盘上已删除的移入 Peach 回收站，带个人记录的标为已消失" aria-label="同步删除"
+      <button type="button" data-sync={id} title="核对该目录：磁盘上已删除的移入 Peach 回收站，带个人记录的标为已消失" aria-label={t('同步删除')}
         {...(busy === 'sync' ? { 'aria-busy': true, 'aria-disabled': true } : {})} onClick={() => void sync()}>
         <Glyph name="folder-sync" />
       </button>
@@ -503,7 +504,7 @@ function SourceTools({ id, actions, onStatus }: { id: number; actions: ItemDetai
 function Rating({ item, write }: { item: DetailItem; write: DetailWrite }) {
   const on = ratingStars(item.rating);
   return (
-    <div id="detailRating" role="group" data-item-rating="" aria-label="评分" data-value={clampRating(item.rating)}>
+    <div id="detailRating" role="group" data-item-rating="" aria-label={t('评分')} data-value={clampRating(item.rating)}>
       <div data-rating-stars="">
         {[1, 2, 3, 4, 5].map((star) => (
           <button key={star} type="button" data-rate={star} data-on={String(star <= on)}
@@ -530,18 +531,18 @@ function Identity({ item, actions }: { item: DetailItem; helpers: ItemDetailHelp
   };
   const group = (label: string, kind: string, list: DetailEntityRef[], extra: ReactNode = null) => (list.length ? (
     <section key={`${kind}:${label}`} data-id-group={kind}>
-      <h5 data-id-label="">{label}</h5>
+      <h5 data-id-label="">{t(label)}</h5>
       <div data-id-row="">{list.map((ref, index) => cell(kind, ref, index))}{extra}</div>
     </section>
   ) : null);
   const primary = [
     groups.unowned ? (
       <section key="unowned" data-id-group="unowned">
-        <h5 data-id-label="">归属</h5>
+        <h5 data-id-label="">{t('归属')}</h5>
         <div data-id-row="">
           <button type="button" data-id-cell="unowned" data-open-unowned="" title="打开未归属：馆藏里没有署名人的作品"
             onClick={actions.openUnowned}>
-            <span data-id-face=""><Glyph name="user-round" /></span><span data-id-name="">未归属</span>
+            <span data-id-face=""><Glyph name="user-round" /></span><span data-id-name="">{t('未归属')}</span>
           </button>
         </div>
       </section>
@@ -648,14 +649,14 @@ function TagPicker({ item, write, helpers }: { item: DetailItem; write: DetailWr
   };
   return (
     <>
-      <button ref={plus} type="button" id="tagPlus" data-tag-plus="" title="添加标签" aria-label="添加标签" aria-expanded={open}
+      <button ref={plus} type="button" id="tagPlus" data-tag-plus="" title={t('添加标签')} aria-label={t('添加标签')} aria-expanded={open}
         onClick={() => {
           if (!picker.current) return;
           presentMenu(picker.current);
           setOpen(true); setQuery(''); setTerm(''); setActive(-1);
           requestAnimationFrame(() => search.current?.focus());
         }}><Glyph name="plus" /></button>
-      <div ref={picker} id="tagPicker" data-tag-picker="" role="dialog" aria-label="添加标签" hidden>
+      <div ref={picker} id="tagPicker" data-tag-picker="" role="dialog" aria-label={t('添加标签')} hidden>
         <label data-tag-search="">
           <Glyph name="search" />
           <input ref={search} id="tagPickSearch" maxLength={80} placeholder="搜索或输入新标签" autoComplete="off" value={query}
@@ -665,7 +666,7 @@ function TagPicker({ item, write, helpers }: { item: DetailItem; write: DetailWr
         </label>
         <div id="tagPickBody" data-tag-body="">
           {open && sections.recent.length ? (
-            <section data-tag-section=""><h4>最近使用</h4><div data-tag-grid="">{sections.recent.map(button)}</div></section>
+            <section data-tag-section=""><h4>{t('最近使用')}</h4><div data-tag-grid="">{sections.recent.map(button)}</div></section>
           ) : null}
           {open ? (
             <section data-tag-section="">
@@ -699,11 +700,11 @@ function Trace({ item }: { item: DetailItem }) {
   return (
     <div data-item-trace="">
       <div data-trace-metric="">
-        <div data-trace-label=""><span>离开位置</span><span id="ratioTxt">0%</span></div>
+        <div data-trace-label=""><span>{t('离开位置')}</span><span id="ratioTxt">0%</span></div>
         <div data-trace-bar=""><u id="watched" /><b id="mark" /></div>
       </div>
       <div data-trace-metric="">
-        <div data-trace-label=""><span>真实观看</span><span id="realTxt">{real == null ? '0%' : `${real.toFixed(0)}%`}</span></div>
+        <div data-trace-label=""><span>{t('真实观看')}</span><span id="realTxt">{real == null ? '0%' : `${real.toFixed(0)}%`}</span></div>
         {/* oxlint-disable-next-line shadcn/no-inline-styles -- 宽度是这一条看过的比例，之后由壳的遥测随上报改写 */}
         <div data-trace-bar=""><u id="realBar" data-trace-real="" style={real == null ? undefined : { width: `${real.toFixed(1)}%` }} /></div>
       </div>
