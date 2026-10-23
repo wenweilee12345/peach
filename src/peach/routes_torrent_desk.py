@@ -29,8 +29,8 @@ def create_router(local_only) -> APIRouter:
         return call(desk, "search", body)
 
     @router.get("/queue")
-    def queue(desk=Depends(service)):
-        return call(desk, "queue")
+    def queue(q: str = '', offset: int = 0, desk=Depends(service)):
+        return call(desk, "queue", {'q': q, 'offset': offset})
 
     @router.post("/submit")
     def submit(body: dict = Body(...), desk=Depends(service)):
@@ -39,5 +39,9 @@ def create_router(local_only) -> APIRouter:
     @router.post("/configuration", dependencies=[Depends(local_only)])
     def configure(body: dict = Body(...), desk=Depends(service)):
         return call(desk, "configure", body)
+
+    @router.post("/manage")
+    def manage(body: dict = Body(...), desk=Depends(service)):
+        return call(desk, "manage", body)
 
     return router

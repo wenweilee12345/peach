@@ -173,6 +173,7 @@ export interface ManagedOpenProps extends Record<ConfigurationPath, { section?: 
   '/duplicates': Record<string, never>;
   '/quality-goals': Record<string, never>;
   '/sources': Record<string, never>;
+  '/torrent-desk': Record<string, never>;
   /** `section`：首帧选中的那一组页签名，取走 `requestConfigurationSection` 记下的那一次（地址带 `#peachProxy` 时是「网络与访问」）。 */
   '/settings/library': { section?: string };
   '/tasks': Record<string, never>;

@@ -1,9 +1,9 @@
 /** 应用导航的完整词表；默认可见顺序由 sidebar 的持久偏好决定。 */
 export type SidebarKey = '' | 'performers' | 'studios' | 'tags' | 'jav' | 'flagged' | 'playlists'
   | 'follow' | 'immerse' | 'manage' | 'stats' | 'taste' | 'review' | 'data-cleanup' | 'trash'
-  | 'follow-manage' | 'quality' | 'activity';
+  | 'follow-manage' | 'quality' | 'activity' | 'torrent-desk';
 export type ManagementKey = 'stats' | 'taste' | 'review' | 'cleanup' | 'trash' | 'follow'
-  | 'quality' | 'activity' | 'configuration';
+  | 'quality' | 'activity' | 'configuration' | 'torrent-desk';
 export type NavigationItem<Key extends string = string> = readonly [key: Key, label: string, glyph: string];
 
 export const SIDEBAR_ITEMS = [
@@ -12,6 +12,7 @@ export const SIDEBAR_ITEMS = [
   ['studios', '厂牌', 'clapperboard'],
   ['tags', '标签', 'tags'],
   ['jav', 'JAV', 'jav'],
+  ['torrent-desk', 'Torrent Desk', 'hard-drive'],
   ['flagged', '已标记', 'bookmark'],
   ['playlists', '播放列表', 'playlist'],
   ['follow', '关注', 'rss'],
@@ -20,6 +21,7 @@ export const SIDEBAR_ITEMS = [
 ] as const satisfies readonly NavigationItem<SidebarKey>[];
 
 export const MANAGE_SECTIONS = [
+  ['torrent-desk', 'Torrent Desk', 'hard-drive'],
   ['stats', '统计', 'chart'],
   ['taste', '口味', 'heart'],
   ['review', '人工复核', 'square-check-big'],
@@ -36,10 +38,11 @@ export const getManageMenuSections = (configurable: boolean): readonly Navigatio
   MANAGE_SECTIONS.filter(([key]) => MANAGE_MENU_SECTIONS.includes(key) && (key !== 'configuration' || configurable));
 
 export const OPTIONAL_SIDEBAR_ITEMS: readonly NavigationItem<SidebarKey>[] = MANAGE_SECTIONS
-  .flatMap(([key, label, glyph]): NavigationItem<SidebarKey>[] => key === 'configuration' ? []
+  .flatMap(([key, label, glyph]): NavigationItem<SidebarKey>[] => key === 'configuration' || key === 'torrent-desk' ? []
     : [[key === 'follow' ? 'follow-manage' : key === 'cleanup' ? 'data-cleanup' : key, label, glyph]]);
 export const NAV_CATALOG: readonly NavigationItem<SidebarKey>[] = [...SIDEBAR_ITEMS, ...OPTIONAL_SIDEBAR_ITEMS];
 export const DIRECT_MANAGE_NAV: Readonly<Partial<Record<SidebarKey, ManagementKey>>> = {
+  'torrent-desk': 'torrent-desk',
   stats: 'stats', review: 'review', 'data-cleanup': 'cleanup', trash: 'trash',
   'follow-manage': 'follow', quality: 'quality', activity: 'activity',
 };

@@ -7,7 +7,7 @@ import { after, before, describe, it } from 'node:test';
 
 import type { Browser, Page } from 'playwright-core';
 
-import { launch, layout, VIEWPORTS } from './harness.ts';
+import { launch, layout, visit, VIEWPORTS } from './harness.ts';
 import { openItemPage, type ItemVisit } from './item-fixture.ts';
 
 const DESKTOP = VIEWPORTS.find((viewport) => !viewport.mobile)!;
@@ -82,6 +82,36 @@ describe('顶栏搜索', () => {
   let browser: Browser;
   before(async () => { browser = await launch(); });
   after(async () => { await browser?.close(); });
+
+  for (const viewport of VIEWPORTS) {
+    it(`${viewport.name} Torrent Desk 直达页可查看文件并取消移除`, { timeout: 60_000 }, async () => {
+      let mutations = 0;
+      const opened = await visit(browser, '/torrent-desk', viewport, async page => {
+        await page.route('**/api/torrent-desk/status', route => route.fulfill({ json: { connected: true, sources: [] } }));
+        await page.route('**/api/torrent-desk/queue?*', route => route.fulfill({ json: { items: [
+          { id: 123, filename: 'Example torrent', status: 'Ready', statusCode: 4, size: 100 }], total: 1, has_more: false } }));
+        await page.route('**/api/torrent-desk/manage', route => {
+          const action = route.request().postDataJSON().action;
+          if (action !== 'files') mutations++;
+          return route.fulfill({ json: { items: [{ name: 'folder/video.mp4', size: 100 }] } });
+        });
+      });
+      try {
+        const { page } = opened;
+        await page.locator('[data-torrent-desk-page]').getByText('Example torrent', { exact: true }).waitFor();
+        assert.equal(await page.locator('[data-nav="torrent-desk"]').count(), 1);
+        await page.getByRole('button', { name: 'View files', exact: true }).click();
+        await page.getByText('folder/video.mp4', { exact: false }).waitFor();
+        await page.getByRole('button', { name: 'Remove from AllDebrid', exact: true }).click();
+        const dialog = page.getByRole('dialog', { name: 'Remove torrent from AllDebrid', exact: true });
+        await dialog.locator('[data-modal-cancel]').click();
+        assert.equal(mutations, 0);
+        assert.deepEqual((await layout(page)).offenders, []);
+        assert.deepEqual(opened.problems, []);
+        await page.screenshot({ path: `../build/agent-verification/browser/torrent-desk-${viewport.name}.png` });
+      } finally { await opened.close() }
+    });
+  }
 
   for (const viewport of VIEWPORTS) {
     it(`${viewport.name} 主搜索缺少馆藏影片时自动展示种子候选`, { timeout: 60_000 }, async () => {

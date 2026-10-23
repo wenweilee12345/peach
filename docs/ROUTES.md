@@ -29,6 +29,7 @@
 | `/?jav=1` | JAV 馆藏 |
 | `/jav?tab=discover` | JAV 探索；`scope=library` 看馆藏，`scope=external` 看外部发现 |
 | `/jav?tab=wants` | 想要的作品 |
+| `/torrent-desk` | 种子搜索、AllDebrid 资料库与媒体库控制 |
 | `/follow` | 关注更新；作者、来源、标签和观看状态使用查询参数 |
 | `/wall` | 视频播放墙 |
 | `/immerse` | 沉浸浏览；`id` 指定起始资产 |

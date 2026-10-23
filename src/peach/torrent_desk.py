@@ -134,11 +134,46 @@ class TorrentDesk:
         self._post("add", {"magnets": f"magnet:?xt=urn:btih:{magnet.info_hash}"}, account=True)
         return {"ok": True}
 
-    def queue(self) -> dict:
+    def queue(self, body=None) -> dict:
+        body = body or {}
+        query = str(body.get('q') or '').strip().casefold()
+        offset = max(0, min(100000, int(body.get('offset') or 0)))
+        if len(query) > 200:
+            raise ValueError('Library filter needs at most 200 characters.')
         data = self._post("queue", {}, account=True)
         rows = data.get("magnets", [])
         if isinstance(rows, dict):
             rows = [rows]
-        return {"ok": True, "items": [{key: row.get(key) for key in
+        rows = [row for row in rows if isinstance(row, dict) and query in str(row.get('filename') or '').casefold()]
+        return {"ok": True, "total": len(rows), "offset": offset, "has_more": len(rows) > offset + 100,
+                "items": [{key: row.get(key) for key in
                 ("id", "filename", "status", "statusCode", "size", "downloaded", "uploadDate")}
-                for row in rows[:100] if isinstance(row, dict)]}
+                for row in rows[offset:offset + 100]]}
+
+    def manage(self, body: dict) -> dict:
+        action = body.get('action')
+        identity = str(body.get('id') or '')
+        if action not in ('files', 'restart', 'delete') or not identity.isascii() or not identity.isdecimal() or len(identity) > 16:
+            raise ValueError('Choose a valid torrent and action.')
+        data = self._post(action, {'id': identity}, account=True)
+        if action != 'files':
+            return {'ok': True}
+        magnets = data.get('magnets') or []
+        if isinstance(magnets, dict):
+            magnets = [magnets]
+        rows = []
+        if not isinstance(magnets, list) or any(not isinstance(magnet, dict) or magnet.get('error') for magnet in magnets):
+            raise ValueError('Torrent files are unavailable. Refresh the queue and retry.')
+        pending = [(entry, '', 0) for magnet in magnets[:100] for entry in (magnet.get('files') or [])]
+        inspected = 0
+        while pending and inspected < 5000 and len(rows) < 2000:
+            entry, prefix, depth = pending.pop()
+            inspected += 1
+            if not isinstance(entry, dict):
+                continue
+            name = (prefix + str(entry.get('n') or ''))[:1000]
+            if isinstance(entry.get('e'), list) and depth < 30:
+                pending.extend((child, name + '/', depth + 1) for child in entry['e'])
+            elif entry.get('l'):
+                rows.append({'name': name, 'size': entry.get('s') or 0})
+        return {'ok': True, 'items': sorted(rows, key=lambda row: row['name'])}

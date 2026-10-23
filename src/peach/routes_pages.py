@@ -804,6 +804,7 @@ def entity_route(request: Request, name: str,
 # 任务中心那一屏（island），数据走 `/api/tasks`。深链要能直接打开：定时任务被挡下时
 # 留下的记录是「刚才为什么没跑」的唯一答案，从别处贴过来的地址不该是 404。
 @router.api_route("/tasks", methods=["GET", "HEAD"])
+@router.api_route("/torrent-desk", methods=["GET", "HEAD"])
 @router.api_route("/sources", methods=["GET", "HEAD"])
 @router.api_route("/resource-sync", methods=["GET", "HEAD"])
 @router.api_route("/follow", methods=["GET", "HEAD"])

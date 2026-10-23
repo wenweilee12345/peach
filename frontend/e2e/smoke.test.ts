@@ -130,6 +130,7 @@ const ROUTES: readonly Route[] = [
   { path: '/diagnostics', body: page => [page.getByRole('tab', { name: '系统诊断', selected: true }), page.locator('#stats section[aria-label="库健康"]')] },
   { path: '/settings/diagnostics', body: page => [page.getByRole('tab', { name: '系统诊断', selected: true }), page.locator('#stats section[aria-label="库健康"]')] },
   { path: '/tasks', body: (page) => [heading(page, '#main', '任务中心'), heading(page, '#stats', '还没有任务记录')] },
+  { path: '/torrent-desk', body: page => [heading(page, '#main', 'Torrent Desk'), page.locator('[data-torrent-desk-page]')] },
   ...['', '/appearance', '/playback', '/jav', '/search', '/content'].map(section => ({ path: '/settings' + section,
     body: (page: Page) => [page.getByRole('dialog', { name: /外观与导航|浏览与播放|JAV 与新作|搜索与推荐|内容显示/ })] })),
   ...['subscriptions', 'downloads', 'network', 'maintenance'].map(section => ({ path: `/settings/${section}`, body: configurationBody })),

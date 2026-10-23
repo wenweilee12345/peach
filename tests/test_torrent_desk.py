@@ -89,6 +89,41 @@ class TorrentDeskTests(unittest.TestCase):
         self.assertEqual(queue['items'][0]['filename'], 'Example')
         self.assertNotIn('private-link', json.dumps(queue))
 
+    def test_file_tree_lists_names_without_provider_links(self):
+        desk = self.desk(lambda request: httpx.Response(200, json={'magnets': [{'files': [
+            {'n': 'folder', 'e': [{'n': 'video.mp4', 's': 100, 'l': 'private-link'}]}]}]}))
+        desk.configure({'api_key': 'test-secret'})
+        result = desk.manage({'action': 'files', 'id': 123})
+        self.assertEqual(result['items'], [{'name': 'folder/video.mp4', 'size': 100}])
+        self.assertNotIn('private-link', json.dumps(result))
+        self.assertEqual(json.loads(self.requests[-1].content), {'id': '123'})
+
+    def test_management_actions_use_only_the_explicit_torrent(self):
+        desk = self.desk()
+        desk.configure({'api_key': 'test-secret'})
+        for action in ('restart', 'delete'):
+            desk.manage({'action': action, 'id': 123})
+            self.assertEqual(self.requests[-1].url.path, '/api/' + action)
+            self.assertEqual(json.loads(self.requests[-1].content), {'id': '123'})
+        before = len(self.requests)
+        for body in ({'action': 'delete', 'id': '../1'}, {'action': 'delete', 'id': True}, {'action': 'bad', 'id': 1}):
+            with self.assertRaises(ValueError):
+                desk.manage(body)
+        self.assertEqual(len(self.requests), before)
+
+    def test_library_filter_and_pagination_cover_entries_after_the_first_page(self):
+        rows = [{'id': index, 'filename': f'Torrent {index}', 'links': ['private']} for index in range(205)]
+        desk = self.desk(lambda request: httpx.Response(200, json={'magnets': rows}))
+        desk.configure({'api_key': 'test-secret'})
+        result = desk.queue({'offset': 200})
+        self.assertEqual(result['total'], 205)
+        self.assertFalse(result['has_more'])
+        self.assertEqual([row['id'] for row in result['items']], list(range(200, 205)))
+        result = desk.queue({'q': 'Torrent 204'})
+        self.assertEqual(result['total'], 1)
+        self.assertEqual(result['items'][0]['id'], 204)
+        self.assertNotIn('private', json.dumps(result))
+
     def test_source_failure_is_partial_and_unsafe_xml_is_rejected(self):
         desk = self.desk(lambda request: httpx.Response(200, json={"xml": '<!DOCTYPE rss><rss/>'})
                          if request.url.path == '/api/search' else None)
@@ -114,7 +149,7 @@ class TorrentDeskTests(unittest.TestCase):
         app.include_router(create_router(lambda: None))
         app.state.settings = SimpleNamespace(token='', secrets_root=Path(self.directory.name).resolve())
         with TestClient(app) as client:
-            for route, body in [('submit', {'magnet': 'a' * 40}),
+            for route, body in [('submit', {'magnet': 'a' * 40}), ('manage', {'action': 'delete', 'id': 1}),
                                 ('configuration', {'api_key': 'private'}), ('search', {'q': 'ABC-123'})]:
                 with self.subTest(route=route):
                     result = client.post('/api/torrent-desk/' + route, json=body,

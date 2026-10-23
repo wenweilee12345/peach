@@ -66,6 +66,7 @@ import { prefetchStats } from '../stats/stats';
 import { StatsPage } from '../stats/stats-page';
 import { DEFAULT_WINDOW, prefetchTaste } from '../taste/taste';
 import { TastePage } from '../taste/taste-page';
+import { TorrentDeskPage } from '../torrent-desk/torrent-desk-page';
 import { CatalogMatch } from './pages/catalog';
 import { FollowMatch, PlaylistsMatch } from './pages/follow';
 import { ImmerseMatch } from './pages/immerse';
@@ -117,6 +118,11 @@ const configurationRoute = (path: ConfigurationPath): ManagedRoute<ManagedOpenPr
 });
 
 export const MANAGED_ROUTES: ManagedRouteTable = {
+  '/torrent-desk': {
+    element: <ManagedMatch path="/torrent-desk" />,
+    prefetch: async () => {},
+    page: (_open, actions) => <TorrentDeskPage navigate={actions.navigate} toast={message => actions.receipt(message)} />,
+  },
   '/jav': {
     element: <ManagedMatch path="/jav" />,
     prefetch: (open, signal) => prefetchJav(open.tab, signal),

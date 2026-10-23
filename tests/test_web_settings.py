@@ -237,7 +237,7 @@ class ContractRegistrationTests(unittest.TestCase):
         # 是从别处发起的动作，只在可加清单里。
         self.assertEqual(
             DEFAULT_SIDEBAR_ORDER,
-            ("", "follow", "jav", "performers", "tags", "studios", "flagged", "manage"))
+            ("", "follow", "jav", "torrent-desk", "performers", "tags", "studios", "flagged", "manage"))
         self.assertNotIn("playlists", DEFAULT_SIDEBAR_ORDER)
         self.assertIn("playlists", web_settings.OPTIONAL_SIDEBAR_KEYS)
         self.assertIn("immerse", web_settings.OPTIONAL_SIDEBAR_KEYS)
