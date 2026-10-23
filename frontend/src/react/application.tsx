@@ -13,6 +13,7 @@ import { releaseAllManagedRoutes } from '../history';
 import { RouterRoot, ROUTER_ROOT_OPTIONS } from './router/router';
 import type { ShellActions } from './router/shell-actions';
 import { ResultUpdates } from './result-updates';
+import { getLocale } from '../i18n';
 
 interface ApplicationResources { effects: ApplicationEffects; owners: number }
 let resources: ApplicationResources | null = null;
@@ -61,6 +62,7 @@ export function Application() {
 }
 const roots = new WeakMap<Element, Root>();
 export function mountApplication(host: Element): Root {
+  document.documentElement.lang = getLocale();
   const current = roots.get(host);
   if (current) return current;
   const root = createRoot(host, ROUTER_ROOT_OPTIONS);

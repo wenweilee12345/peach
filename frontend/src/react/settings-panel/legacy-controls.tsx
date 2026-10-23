@@ -13,8 +13,9 @@ import {
 } from '@peach/legacy/ui';
 
 import type { Choice } from './settings-panel-api';
+import { t } from '../../i18n';
 
-const rows = (options: readonly Choice[]): Choice[] => options.map(([value, label, mark]) => mark ? [value, label, mark] : [value, label]);
+const rows = (options: readonly Choice[]): Choice[] => options.map(([value, label, mark]) => mark ? [value, t(label), mark] : [value, t(label)]);
 
 /** 一组互斥视图。`value` 与上一次画出来的不同、或者面板重新打开（`epoch` 换了）时整块重画：
  *  滑块按新的选中项重新量位置。点选本身不重画，DOM 已经是点完的样子。`variant` 是遗留模板
@@ -31,7 +32,7 @@ export function IconSwitch({ id, name, legend, options, value, attr, variant, te
     const node = mount.current;
     if (!node) return;
     if (painted.current && painted.current.value === value && painted.current.epoch === epoch) return;
-    node.innerHTML = iconSwitchHtml(name, legend, rows(options), value, { attr, className: variant, text });
+    node.innerHTML = iconSwitchHtml(name, t(legend), rows(options), value, { attr, className: variant, text });
     wireIconSwitch(node, attr, (next) => {
       painted.current = { value: next, epoch };
       choose.current(next);
@@ -56,7 +57,7 @@ export function SelectField({ id, label, options, value, disabled = false, busy 
     const node = mount.current;
     if (!node) return;
     if (built.current !== epoch || !field.current) {
-      node.innerHTML = selectFieldHtml(rows(options), value, { label });
+      node.innerHTML = selectFieldHtml(rows(options), value, { label: t(label) });
       const root = wireSelectField(node.firstElementChild as HTMLElement);
       root.addEventListener('change', () => pick.current(root.value));
       field.current = root;

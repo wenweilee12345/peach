@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 首页上方那一整块：两排头像（女优、厂牌），加一块两排的玻璃浮层（上排四枚视图与标签，下排读数、
  * 换一批、卡片版式与排序键），再加正文里网格上面那条交集条。
  *
@@ -83,14 +84,14 @@ function Glass(props: CatalogFilterProps) {
   useLayoutEffect(() => { popBadges(tagRow.current, 'tagbar') }, [tags]);
 
   return (
-    <FilterGlassRows label="筛选与排序" topLabel="视图与标签"
+    <FilterGlassRows label={t('筛选与排序')} topLabel="视图与标签"
       attrs={{ 'data-filter-frame': '', 'data-catalog-frame': '', ...(singleRow ? { 'data-single-row': '' } : {}) }}
       className="mx-4" topClassName="gap-1.5 overflow-visible" bottomClassName={props.trash ? 'hidden' : 'min-h-12'}
       bottomRef={bottomRow} busy={props.count === null || props.refreshing}
       panes={<span ref={pane} data-view-glide="" aria-hidden="true" />}
       top={
         <div ref={scroll} data-catalog-scroll="">
-          <div ref={viewRow} role="group" aria-label="视图" data-catalog-views="" onPointerLeave={glide.leave}>
+          <div ref={viewRow} role="group" aria-label={t('视图')} data-catalog-views="" onPointerLeave={glide.leave}>
             {props.views.map((view) => (
               <a key={view.k} href={view.href} data-catalog-view={view.k} data-entity-press=""
                 aria-pressed={props.state === view.k} onPointerEnter={glide.hover}

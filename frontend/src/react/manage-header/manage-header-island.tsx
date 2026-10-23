@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 管理区页头（ADR-0031 第 11g 步）：管理条、面包屑、页面标题与回收站说明行。
  *
  * 常驻组件 `manage-header`（`router/managed-routes.tsx` 的常驻表）：路由树把它画进壳常驻的
@@ -59,7 +60,7 @@ function ManageHeader({ host: at, props: current }: { host: ManageHeaderHost; pr
     <>
       <ManageBar host={at} pressed={view.pressed} menu={current.menu} />
       {view.crumb ? <Crumb host={at} label={view.crumb} /> : null}
-      <h2 data-manage-title="" data-compact={view.compact ? '' : undefined}>{view.title}</h2>
+      <h2 data-manage-title="" data-compact={view.compact ? '' : undefined}>{t(view.title)}</h2>
       {view.lede.kind === 'none' ? null : <TrashLede host={at} lede={view.lede} />}
     </>
   );
@@ -79,14 +80,14 @@ function ManageBar({ host: at, pressed: key, menu }: Pick<ManageHeaderProps, 'me
   }, [key, menu]);
 
   return (
-    <nav data-manage-bar="" aria-label="管理">
+    <nav data-manage-bar="" aria-label={t('管理')}>
       <div ref={row} data-manage-menu="">
         {menu.map(([entry, label, glyph]) => {
           const on = entry === key;
           return (
             <button key={entry} type="button" data-manage={entry} aria-pressed={on} aria-current={on ? 'page' : undefined}
               onClick={() => at.openManage(entry)}>
-              <Icon name={glyph} /><span>{label}</span>
+              <Icon name={glyph} /><span>{t(label)}</span>
             </button>
           );
         })}
@@ -107,8 +108,8 @@ function Crumb({ host: at, label }: { host: ManageHeaderHost; label: string }) {
   return (
     <nav data-manage-crumb="" aria-label="Breadcrumb">
       <ol>
-        <li><a href="/data-cleanup" onClick={follow}>数据管理</a><Icon name="chevron-right" /></li>
-        <li aria-current="true"><span>{label}</span></li>
+        <li><a href="/data-cleanup" onClick={follow}>{t('数据管理')}</a><Icon name="chevron-right" /></li>
+        <li aria-current="true"><span>{t(label)}</span></li>
       </ol>
     </nav>
   );

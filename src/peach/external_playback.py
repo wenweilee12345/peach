@@ -8,6 +8,17 @@ import time
 TTL_SECONDS = 6 * 60 * 60
 
 
+def deovr_scene(asset_id: int, title: str, url: str, *, projection: str = 'flat',
+                stereo: str = 'off') -> dict:
+    """按 DeoVR 单片 JSON 协议提供原始媒体与用户选择的投影。"""
+    if projection not in {'flat', 'dome', 'sphere', 'fisheye'}:
+        raise ValueError('Unsupported VR projection')
+    if stereo not in {'off', 'sbs', 'tb'}:
+        raise ValueError('Unsupported stereo layout')
+    return {'id': asset_id, 'title': title, 'path': url,
+            'is3d': stereo != 'off', 'screenType': projection, 'stereoMode': stereo}
+
+
 def issue(key: bytes, asset_id: int, *, origin: str = '', now: float | None = None) -> str:
     expires = int(time.time() if now is None else now) + TTL_SECONDS
     message = f"{asset_id}.{expires}.{origin}"

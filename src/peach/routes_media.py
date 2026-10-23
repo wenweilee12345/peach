@@ -204,7 +204,8 @@ def external_playback(request: Request, id: int, args: dict[str, str] = Depends(
     query = f"ticket={ticket}&origin={quote(origin, safe='')}"
     path = f"/external-stream/{id}?{query}"
     playlist = f"/external-playlist/{id}.m3u?{query}"
-    return JSONResponse({"url": path, "playlist": playlist, "expires_in": TTL_SECONDS},
+    deovr = f"/external-deovr/{id}.json?{query}"
+    return JSONResponse({"url": path, "playlist": playlist, "deovr": deovr, "expires_in": TTL_SECONDS},
                         headers={"Cache-Control": "no-store"})
 
 
@@ -234,6 +235,21 @@ def external_playlist(request: Request, id: int, ticket: str, origin: str = ''):
     return PlainTextResponse(f"#EXTM3U\n#EXTINF:-1,Peach {id}\n{url}\n", media_type="audio/x-mpegurl",
                              headers={"Content-Disposition": f'attachment; filename="peach-{id}.m3u"',
                                       "Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+
+
+@router.get("/external-deovr/{id}.json")
+def external_deovr(request: Request, id: int, ticket: str, origin: str = '',
+                   projection: str = 'flat', stereo: str = 'off'):
+    from .external_playback import deovr_scene
+    from fastapi import HTTPException
+    _external_asset(request, id, ticket, origin)
+    asset = request.app.state.media_engine.asset(id)
+    url = origin + f"/external-stream/{id}?ticket={ticket}&origin={quote(origin, safe='')}"
+    try:
+        scene = deovr_scene(id, asset.name or f'Peach {id}', url, projection=projection, stereo=stereo)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+    return JSONResponse(scene, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
 
 
 @router.api_route("/stream", methods=["GET", "HEAD"])

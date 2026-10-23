@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 活动页：任务中心那张表的唯一界面。
  *
  * 这一屏要回答三个问题，顺序就是它们的紧迫程度：现在有什么在跑、有哪一轮被挡下了、
@@ -42,7 +43,7 @@ const BADGE_COLORS: Record<string, 'lime' | 'rose' | 'yellow'> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  return <Chip color={BADGE_COLORS[status] ?? 'neutral'}>{statusLabel(status)}</Chip>;
+  return <Chip color={BADGE_COLORS[status] ?? 'neutral'}>{t(statusLabel(status))}</Chip>;
 }
 
 /** 一轮任务派出的后继（ADR-0040）。挂在父任务卡里，一条一行。
@@ -226,11 +227,11 @@ export function ActivityPage() {
         ? <Note tone="warning">{data.message || '数据库尚未准备好任务记录表'}</Note>
         : null}
       {quiet
-        ? <EmptyState shell="plain" icon={RiHistoryLine} title="还没有任务记录">
+        ? <EmptyState shell="plain" icon={RiHistoryLine} title={t('还没有任务记录')}>
             扫描、追更检查、批量操作和命令行批处理跑起来之后，这里会显示它们的进度与结果。
           </EmptyState>
         : <>
-            <Section title="正在进行">
+            <Section title={t('正在进行')}>
               {running.length || working.length
                 ? <RunList live>
                     {running.map((run) => (
@@ -238,18 +239,18 @@ export function ActivityPage() {
                     {working.map((run) => (
                       <SettledRun key={run.id} run={run} followups={byParent.get(run.id)} />))}
                   </RunList>
-                : <Note tone="neutral">没有任务在跑。</Note>}
+                : <Note tone="neutral">{t('没有任务在跑。')}</Note>}
             </Section>
             {/* 「刚才那一轮为什么没跑」只有这一段答得出：定时触发撞上在跑的那一轮会
                 安静跳过，不留记录的话它在界面上和从没触发过一模一样。 */}
             {skipped.length
-              ? <Section title="被挡下的">
+              ? <Section title={t('被挡下的')}>
                   <RunList>{skipped.map((run) => (
                     <SettledRun key={run.id} run={run} followups={byParent.get(run.id)} />))}</RunList>
                 </Section>
               : null}
             {finished.length || hasEarlier
-              ? <Section title="最近完成">
+              ? <Section title={t('最近完成')}>
                   {finished.length
                     ? <RunList>{folds.map(({ run, runs }) => (
                         <SettledRun key={run.id} run={run} runs={runs}

@@ -1,3 +1,5 @@
+import { t } from '../../i18n';
+import { LanguageSetting } from './language-setting';
 /* 「应用与维护」中的开机自启、桌面快捷方式与版本更新。 */
 import { useState, type FormEvent } from 'react';
 
@@ -18,7 +20,8 @@ import { busyProps, useAction } from './use-action';
 export function GeneralSettings({ data, receipt, panel }: ConfigurationGroupProps) {
   return (
     <div {...groupRoot(panel)}>
-      {data.remote_reporting || data.library_sharing ? <Section title="数据上传">
+      <Section title="Language / 语言"><LanguageSetting /></Section>
+      {data.remote_reporting || data.library_sharing ? <Section title={t('数据上传')}>
         {data.remote_reporting ? <RemoteReportingSettings initial={data.remote_reporting} receipt={receipt} /> : null}
         {data.library_sharing ? <div className="border-t border-separator-border">
           <LibrarySharingSettings initial={data.library_sharing} receipt={receipt} />
@@ -48,7 +51,7 @@ export function StartupSettings({ startup, receipt }: { startup: StartupState; r
   };
 
   return (
-    <Section title="开机自启" onSubmit={submit}>
+    <Section title={t('开机自启')} onSubmit={submit}>
       <Rows>
         <SettingsRow label="开机后启动 Peach">
           <Switch aria-label="开机后启动 Peach" isSelected={enabled} isDisabled={!startup.available} onChange={setEnabled} />
@@ -67,7 +70,7 @@ export function StartupSettings({ startup, receipt }: { startup: StartupState; r
         </Stack>
       ) : null}
       <Footer>
-        <Button type="submit" disabled={!startup.available} {...busyProps(action.busy === 'save')}>保存配置</Button>
+        <Button type="submit" disabled={!startup.available} {...busyProps(action.busy === 'save')}>{t('保存配置')}</Button>
       </Footer>
     </Section>
   );

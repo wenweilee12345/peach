@@ -5,6 +5,7 @@ import { click, mount, settle } from './render';
 it('外部播放器只在用户请求后签发链接，并保留网络地址供 VR 播放器使用', async () => {
   const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({
     url: '/external-stream/1?ticket=short', playlist: '/external-playlist/1.m3u?ticket=short',
+    deovr: '/external-deovr/1.json?ticket=short',
   }) }));
   vi.stubGlobal('fetch', fetcher);
   const host = await mount(<ExternalPlayback id={1} />);
@@ -21,4 +22,6 @@ it('专属协议只编码服务端播放地址', () => {
   expect(playerLink('vlc-ios', url, '/list')).toBe(`vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(url)}`);
   expect(playerLink('iina', url, '/list')).toBe(`iina://weblink?url=${encodeURIComponent(url)}`);
   expect(playerLink('unknown', url, '/list')).toBe('/list');
+  expect(playerLink('deovr', url, '/list', 'https://peach.example/scene.json?ticket=a.b')).toBe(
+    'deovr://https://peach.example/scene.json?ticket=a.b');
 });

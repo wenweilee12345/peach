@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { RiArrowDownSLine, RiDatabase2Line, RiGlobalLine, RiHardDrive2Line } from '@remixicon/react';
 import { Popover } from 'react-aria-components';
@@ -41,12 +42,12 @@ export function ProcessingActions({ busy, scan = false, metadataOnly = false, sp
     const previews = command.stage === 'previews';
     const title = previews ? '生成视频预览' : command.stage === 'scan' ? '扫描媒体文件' : '同步媒体库';
     const dialog = formModal({
-      title,
+      title: t(title),
       description: previews
         ? '生成视频预览会读取视频并占用处理器，可能让电脑变慢。需要同时使用电脑时，可选择低占用模式。'
         : `处理会读取媒体文件${command.stage === 'scan' ? '' : metadataOnly ? '并下载资料' : '、下载资料并生成视频预览'}，可能让电脑变慢。需要同时使用电脑时，可选择低占用模式。`,
       body: iconSwitchHtml('processing-speed', '处理模式', [['low', '低占用'], ['standard', '标准'], ['high', '全速']], speedMode, { text: true }),
-      confirmLabel: title,
+      confirmLabel: t(title),
       onConfirm: async () => {
         const selected = dialog.dialog.querySelector<HTMLInputElement>('input[name="processing-speed"]:checked')?.value;
         await onRun({ ...command, speed_mode: selected === 'low' ? 'low' : selected === 'high' ? 'high' : 'standard' });
@@ -58,19 +59,19 @@ export function ProcessingActions({ busy, scan = false, metadataOnly = false, sp
   };
   return <>
     <span data-button-group data-split-button data-variant="primary">
-      <Button leadingIcon={primary.icon} {...busyProps(busy)} onClick={() => run(primary.command)}>{primary.label}</Button>
-      <Button ref={trigger} iconOnly leadingIcon={RiArrowDownSLine} aria-label="更多同步方式"
+      <Button leadingIcon={primary.icon} {...busyProps(busy)} onClick={() => run(primary.command)}>{t(primary.label)}</Button>
+      <Button ref={trigger} iconOnly leadingIcon={RiArrowDownSLine} aria-label={t('更多同步方式')}
         aria-haspopup="dialog" aria-expanded={open} {...busyProps(busy)} onClick={() => { if (!busy) setOpen(!open) }} />
     </span>
     <Popover triggerRef={trigger} isOpen={open} onOpenChange={setOpen} placement="bottom end" offset={4}
       className={MENU_POPOVER_SURFACE}>
-      <MenuDialog aria-label="同步方式" className="flex w-56 flex-col gap-1 outline-none">
+      <MenuDialog aria-label={t('同步方式')} className="flex w-56 flex-col gap-1 outline-none">
         {options.map(({ label, icon: Icon, command }) => {
           const blocked = metadataOnly && 'stage' in command && command.stage === 'previews';
           return <button key={label} type="button" disabled={blocked}
             title={blocked ? '请先在媒体库设置中开启视频预览生成' : undefined}
             className={cx(MENU_ITEM, MENU_ITEM_INTERACTIVE, 'text-body-2-medium')}
-            onClick={() => run(command)}><Icon aria-hidden className="size-4 shrink-0" />{label}</button>;
+            onClick={() => run(command)}><Icon aria-hidden className="size-4 shrink-0" />{t(label)}</button>;
         })}
       </MenuDialog>
     </Popover>

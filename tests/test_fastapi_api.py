@@ -2595,6 +2595,13 @@ class FastApiContractTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('#EXTM3U', playlist.text)
         self.assertIn(links['url'], playlist.text)
         self.assertNotIn(str(self.media_root), playlist.text)
+        scene = await self.client.get(links['deovr'] + '&projection=dome&stereo=sbs')
+        self.assertEqual(scene.status_code, 200, scene.text)
+        self.assertEqual(scene.json()['screenType'], 'dome')
+        self.assertEqual(scene.json()['stereoMode'], 'sbs')
+        self.assertEqual(scene.json()['path'], 'http://test' + links['url'])
+        self.assertEqual((await self.client.get(links['deovr'] + '&projection=invalid')).status_code, 400)
+        self.assertEqual((await self.client.get(links['deovr'].replace('/1.json?', '/2.json?'))).status_code, 401)
         self.assertEqual((await self.client.get(links['url'].replace('/1?', '/2?'))).status_code, 401)
         cross_site = await self.client.post('/api/external-playback?id=1', json={},
             headers={'X-Token': 'secret', 'Origin': 'https://attacker.example'})
@@ -3465,6 +3472,7 @@ PUBLIC_ROUTES = {
     # 绑定单个资产与公开 Origin，验证后仍逐次检查媒体根目录。
     ("GET,HEAD", "/external-stream/{id}"),
     ("GET", "/external-playlist/{id}.m3u"),
+    ("GET", "/external-deovr/{id}.json"),  # 单资产签名票据授权的 DeoVR 场景。
     # STRM 的 HLS 子资源供浏览器和外部播放器共用：处理函数验证浏览器会话，
     # 或绑定资产与 Origin 的限时 HMAC；两条分支都检查媒体根目录及资源归属。
     ("GET,HEAD", "/strm-resource/{id}/{key}"),

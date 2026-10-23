@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 数据管理页上的「扫描与采集」卡片。
  *
  * 卡片里讲的是那颗按钮此刻在做什么（进度或等待点）；结果和故障讲的是这一趟任务的下场，
@@ -72,12 +73,12 @@ function Outcome(
     /* 空着时整块收起：`aria-live` 的容器留着一条空轨道，卡片底下就凭空多出一个间距。 */
     <div aria-live="polite" className="flex flex-col gap-4 empty:hidden">
       {state.status === 'running' && state.stalled
-        ? <Note tone="warning" title="处理较慢">{STALLED_TEXT}</Note>
+        ? <Note tone="warning" title={t('处理较慢')}>{STALLED_TEXT}</Note>
         : null}
       {problem || state.status === 'failed'
         ? <Note tone="error" className="gap-0 p-3"
             action={retryable
-              ? <Button variant="primary" size="small" onClick={onRetry}>重试未完成项</Button>
+              ? <Button variant="primary" size="small" onClick={onRetry}>{t('重试未完成项')}</Button>
               : null}
             extra={details
               /* 三层东西叠在同一块红底上：一句结论、一份清单、一条日志地址。各自之间
@@ -117,7 +118,7 @@ function Outcome(
           </Note>
         : null}
       {settled?.status === 'complete'
-        ? <Note tone="success" title="处理完成">{receiptText(settled)}</Note>
+        ? <Note tone="success" title={t('处理完成')}>{receiptText(settled)}</Note>
         : null}
       {!processingActive(state) && notes
         ? <Note tone="neutral"
@@ -169,11 +170,11 @@ export function LibraryProcessingCard(props: LibraryProcessingProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Fieldset layout="stack" label="扫描与采集" footer={
+      <Fieldset layout="stack" label={t('扫描与采集')} footer={
         <>
-          <LinkButton href="/sources" size="small" trailingIcon={RiArrowRightLine}>来源和凭证</LinkButton>
+          <LinkButton href="/sources" size="small" trailingIcon={RiArrowRightLine}>{t('来源和凭证')}</LinkButton>
           {state.candidates
-            ? <LinkButton href="/review" size="small" trailingIcon={RiArrowRightLine}>复核资料</LinkButton>
+            ? <LinkButton href="/review" size="small" trailingIcon={RiArrowRightLine}>{t('复核资料')}</LinkButton>
             : null}
           {/* 两个入口并存，各自答的不是一个问题：这里是「重新跑一整批」，下面那条错误提示里
               的「重试未完成项」只补上一趟没做完的那些。采集里网络超时几乎每趟都留下几项可
@@ -182,10 +183,10 @@ export function LibraryProcessingCard(props: LibraryProcessingProps) {
         </>
       }>
         <div className="flex flex-col gap-2">
-          <FieldsetTitle>扫描与采集</FieldsetTitle>
+          <FieldsetTitle>{t('扫描与采集')}</FieldsetTitle>
           <p className="text-body-2-regular text-text-secondary">{SCAN_CARD_TEXT}</p>
           {state.status === 'paused' && !state.total
-            ? <p className="text-caption-1-regular text-text-secondary">已暂停</p>
+            ? <p className="text-caption-1-regular text-text-secondary">{t('已暂停')}</p>
             : processingActive(state)
             ? <ProcessingProgress state={state} />
             : null}

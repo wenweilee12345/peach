@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 数据管理页：库里已经有的东西怎么收拾。
  *
  * 照 Board 的 dashboard 模板排：顶上一排读数卡，每张是一条内容在库里的经过、兼那一页的入口；
@@ -73,22 +74,22 @@ export function DataCleanupPage({ toast, failure, open }: DataCleanupProps) {
   return (
     <Page>
       <div className={PLAIN_STAT_STRIP}>
-        <EntryCard section="review" label="人工复核" icon={REVIEW} open={open}
+        <EntryCard section="review" label={t('人工复核')} icon={REVIEW} open={open}
           value={reading(review, reviewSummary)} />
-        <EntryCard section="quality" label="高清版" icon={QUALITY} open={open}
+        <EntryCard section="quality" label={t('高清版')} icon={QUALITY} open={open}
           value={reading(quality, (data) => ({ figure: `${Number(data.total || 0).toLocaleString()} 个待升级` }))} />
-        <EntryCard section="duplicates" label="重复文件" icon={DUPLICATES} open={open}
+        <EntryCard section="duplicates" label={t('重复文件')} icon={DUPLICATES} open={open}
           value={reading(duplicates, (data) => (Number(data.total || 0)
             ? {
                 figure: `${Number(data.total).toLocaleString()} 组 · ${Number(data.files || 0).toLocaleString()} 个文件`,
                 meta: `可回收 ${fmtSize(data.reclaimable || 0)}`,
               }
             : { figure: '没有重复内容' }))} />
-        <EntryCard section="ads" label="垃圾文件" icon={JUNK} open={open}
+        <EntryCard section="ads" label={t('垃圾文件')} icon={JUNK} open={open}
           value={reading(junk, (data) => ({
             figure: `${Number(data.pending_total || 0).toLocaleString()} 个待判断`, meta: junkBreakdown(data),
           }))} />
-        <EntryCard section="trash" label="回收站" icon={TRASH} open={open}
+        <EntryCard section="trash" label={t('回收站')} icon={TRASH} open={open}
           value={reading(trash, (data) => ({
             figure: `${Number(data.total || 0).toLocaleString()} 项在回收站`,
             meta: data.total ? `占用 ${fmtSize(data.bytes || 0)}` : '',

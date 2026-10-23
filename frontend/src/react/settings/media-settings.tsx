@@ -1,3 +1,4 @@
+import { t } from '../../i18n';
 /* 「媒体库与入库」分组：媒体目录与自动入库，每个文件夹标着挂载状态。
  *
  * 服务端检查管理权限后用 `editable` 控制表单；没有权限时只说明原因。
@@ -60,7 +61,7 @@ const fieldErrorsOf = (cause: unknown): FieldErrors | null => {
 export function MediaSettings({ data, receipt, panel }: ConfigurationGroupProps) {
   return (
     <div {...groupRoot(panel)}>
-      {data.editable ? <MediaForm data={data} receipt={receipt} /> : <Note tone="neutral" title="只读">{data.notice}</Note>}
+      {data.editable ? <MediaForm data={data} receipt={receipt} /> : <Note tone="neutral" title={t('只读')}>{data.notice}</Note>}
       {data.editable ? null : <MountStatus data={data} />}
       {data.push_discovery
         ? <PushDiscoveryForm initial={data.push_discovery} receipt={receipt} />
@@ -116,7 +117,7 @@ function MediaForm({ data, receipt }: ConfigurationGroupProps) {
 
   if (saved) {
     return (
-      <Section title="媒体目录">
+      <Section title={t('媒体目录')}>
         <Stack>
           <Note tone="success" title="配置已保存">
             Peach 正在重新启动。稍后自动跳转，或点击<LinkButton href={saved.url} size="small">进入馆藏</LinkButton>。
@@ -131,11 +132,11 @@ function MediaForm({ data, receipt }: ConfigurationGroupProps) {
   const cloud = rows.some((row) => isCloudSource(row.location));
   const missing = cloud ? (data.mount_dependencies ?? []).filter((dependency) => !dependency.available) : [];
   return (
-    <Section title="媒体目录" onSubmit={submit}>
+    <Section title={t('媒体目录')} onSubmit={submit}>
       <Stack>
         <div className="flex flex-col gap-3">
-          <FieldLabel>媒体目录</FieldLabel>
-          <div role="group" aria-label="媒体目录" className="flex flex-col gap-3">
+          <FieldLabel>{t('媒体目录')}</FieldLabel>
+          <div role="group" aria-label={t('媒体目录')} className="flex flex-col gap-3">
             {rows.map((row, index) => (
               <FolderRow key={index} label={`媒体目录 ${index + 1}`} path={row.path}
                 onPath={(path) => edit(index, { path })} error={rowErrors[index]} inputRef={inputRef(index)}
@@ -162,11 +163,11 @@ function MediaForm({ data, receipt }: ConfigurationGroupProps) {
             未检测到 {dependency.name}。<ExternalLink href={dependency.download_url}>下载 {dependency.name}</ExternalLink>
           </Help>
         ))}
-        <Checkbox isSelected={scanNow} onChange={setScanNow}>保存后扫描并补全资料</Checkbox>
-        {failure ? <Note tone="error" title="没有保存">{failure}</Note> : null}
+        <Checkbox isSelected={scanNow} onChange={setScanNow}>{t('保存后扫描并补全资料')}</Checkbox>
+        {failure ? <Note tone="error" title={t('没有保存')}>{failure}</Note> : null}
       </Stack>
-      <Footer status="保存后 Peach 会重新启动。">
-        <Button type="submit" {...busyProps(action.busy === 'save')}>保存配置</Button>
+      <Footer status={t('保存后 Peach 会重新启动。')}>
+        <Button type="submit" {...busyProps(action.busy === 'save')}>{t('保存配置')}</Button>
       </Footer>
     </Section>
   );
@@ -185,7 +186,7 @@ function MountStatus({ data }: { data: ConfigurationData }) {
   const refresh = () => void action.run('refresh', (signal) => fetchConfiguration(signal),
     (result) => queryClient.setQueryData(CONFIGURATION_KEY, result));
   return (
-    <Section title="挂载状态">
+    <Section title={t('挂载状态')}>
       <FactList>
         {sources.map((row, index) => (
           <Fact key={index} term={<><SourceMark mark={sourceMark(row.location)} />{sourceName(row.location)}</>}>
@@ -195,7 +196,7 @@ function MountStatus({ data }: { data: ConfigurationData }) {
       </FactList>
       {action.error ? <Stack divided><ErrorText>{action.error}</ErrorText></Stack> : null}
       <Footer>
-        <Button variant="secondary" onClick={refresh} {...busyProps(action.busy === 'refresh')}>刷新挂载状态</Button>
+        <Button variant="secondary" onClick={refresh} {...busyProps(action.busy === 'refresh')}>{t('刷新挂载状态')}</Button>
       </Footer>
     </Section>
   );

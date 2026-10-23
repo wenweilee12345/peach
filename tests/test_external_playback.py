@@ -1,10 +1,24 @@
 """外部播放器票据只授权单资产、限时读取。"""
 import unittest
 
-from peach.external_playback import TTL_SECONDS, issue, valid
+from peach.external_playback import TTL_SECONDS, deovr_scene, issue, valid
 
 
 class ExternalPlaybackTests(unittest.TestCase):
+    def test_deovr_projection_and_source_are_explicit(self):
+        scene = deovr_scene(42, 'VR title', 'https://peach.example/external-stream/42?ticket=signed',
+                            projection='dome', stereo='sbs')
+        self.assertEqual(scene['screenType'], 'dome')
+        self.assertEqual(scene['stereoMode'], 'sbs')
+        self.assertTrue(scene['is3d'])
+        self.assertEqual(scene['id'], 42)
+        self.assertIn('ticket=signed', scene['path'])
+        self.assertFalse(deovr_scene(42, 'Flat title', 'https://peach.example/42')['is3d'])
+        with self.assertRaises(ValueError):
+            deovr_scene(42, 'title', 'url', projection='unknown')
+        with self.assertRaises(ValueError):
+            deovr_scene(42, 'title', 'url', stereo='unknown')
+
     def test_ticket_is_scoped_expiring_and_tamper_evident(self):
         key = b'one-instance-key'
         ticket = issue(key, 42, now=100)

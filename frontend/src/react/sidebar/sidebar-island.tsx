@@ -26,6 +26,7 @@ import {
   type DragEvent, type MouseEvent, type ReactNode,
 } from 'react';
 import { createPortal, flushSync } from 'react-dom';
+import { t } from '../../i18n';
 
 import { growCollapse, popBadges, setCollapseOpen } from '@peach/legacy/ui';
 
@@ -148,12 +149,12 @@ function Navigation({ host: at, epoch, version }: { host: SidebarHost; epoch: nu
     <>
       <div data-sidebar-nav="" ref={column} onPointerLeave={glide.leave}>
         {items.map(([key, label, glyph], index) => (
-          <button type="button" key={key || HOME} data-nav={key} aria-pressed={pressed[index]} aria-label={label}
+          <button type="button" key={key || HOME} data-nav={key} aria-pressed={pressed[index]} aria-label={t(label)}
             data-dragging={dragging === key ? '' : undefined}
             data-drop={drop?.key === key ? (drop.after ? 'after' : 'before') : undefined}
             onClick={() => at.navTo(key)} onPointerEnter={glide.hover} {...drag(key)}>
             {key === '' ? <img data-sidebar-home-logo="" src="/peach-logo.png" alt="" /> : <Icon name={glyph} />}
-            <span>{label}</span>
+            <span>{t(label)}</span>
           </button>
         ))}
       </div>
