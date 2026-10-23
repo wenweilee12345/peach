@@ -37,6 +37,7 @@ from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES, GZipMiddle
 from . import (__version__, browser_transport, feeds, tunnel, web_batch, web_contract,
                web_feeds, web_follow, web_settings)
 from . import routes_api, routes_auth, routes_configuration, routes_jav_browser, routes_media, routes_pages, routes_subtitles
+from . import routes_torrent_desk
 from .buildinfo import frozen_build
 from .config import LOCATION_ROOT_DECLARATIONS, PeachSettings
 from .ffmpeg import FFmpegResolver
@@ -592,6 +593,7 @@ def create_app(
     app.include_router(routes_pages.router)
     app.include_router(routes_configuration.router)
     app.include_router(routes_jav_browser.create_router(routes_configuration.local_only))
+    app.include_router(routes_torrent_desk.create_router(routes_configuration.local_only))
     app.include_router(routes_media.router)
     app.include_router(routes_subtitles.router)
     app.include_router(routes_api.router)
