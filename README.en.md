@@ -137,6 +137,13 @@ Thanks to [amane](https://github.com/sqzw-x/amane), [Gfriends](https://github.co
   </picture>
 </a>
 
+## PC integration edition
+
+This fork includes a localhost test launcher, per-video metadata refresh, optional mounted-folder
+polling, portrait resolution controls, an English UI option, DeoVR playback links, and local
+Torrent Desk / Jackett search with explicit AllDebrid submission. See [PC setup](docs/PC_EDITION.md),
+[language and VR](docs/PC_LANGUAGE_VR.md), and [torrent search](docs/TORRENT_DESK.md).
+
 ## License
 
 [AGPL-3.0-or-later](LICENSE) · Copyright (C) 2026 longmeidao. Third-party components retain their own licenses.

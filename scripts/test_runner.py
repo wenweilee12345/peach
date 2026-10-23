@@ -44,7 +44,7 @@ SCOPES: dict[str, tuple[str, ...]] = {
                 "test_link_marks.py", "test_site_icons.py", "test_site_logos.py",
                 "test_avatar_face.py",
                 "test_brand_marks.py", "test_studio_icon_variants.py",
-                "test_push_discovery.py", "test_media_probe.py",
+                "test_push_discovery.py", "test_pc_edition.py", "test_torrent_desk.py", "test_media_probe.py",
                 "test_downloads*.py", "test_web_downloads.py",
                 "test_review_csv.py", "test_related.py",
                 "test_search_suggest.py", "test_subtitles.py",

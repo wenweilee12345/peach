@@ -400,7 +400,9 @@ it('封面格子在取景区里取一块 3:4，图库人像照旧铺满', async 
       focus: { x0: 592, y0: 114, x1: 688, y1: 210 } }),
   ]));
   await openPicker();
-  const [portrait, cover] = cells().map((cell) => cell.querySelector('img'));
+  const images = cells().map((cell) => cell.querySelector('img'));
+  const portrait = images.find(image => image?.src.includes('gfriends%3A'));
+  const cover = images.find(image => image?.src.includes('asset%3A11'));
   expect(portrait?.style.getPropertyValue('--tile-width')).toBe('');
   // 96px 的方块里装得下的 3:4 是 72×96，居中在 (640, 162)：左上角 (604, 114)。
   expect({
@@ -412,6 +414,18 @@ it('封面格子在取景区里取一块 3:4，图库人像照旧铺满', async 
     left: `${(-604 / 72) * 100}%`, top: `${(-114 / 96) * 100}%`,
     width: `${(800 / 72) * 100}%`, height: `${(540 / 96) * 100}%`,
   });
+});
+
+it('默认按已知像素数排序，也可恢复来源顺序', async () => {
+  server(listing([
+    choice({ label: 'Small portrait', width: 125, height: 125 }),
+    choice({ ref: 'asset:11:cover', label: 'Large portrait', width: 800, height: 1200 }),
+  ]));
+  await openPicker();
+  expect(cells()[0]?.textContent).toContain('Large portrait');
+  expect(cells()[0]?.textContent).toContain('800 × 1200');
+  await click(dialog()?.querySelector('input[type="checkbox"]'));
+  expect(cells()[0]?.textContent).toContain('Small portrait');
 });
 
 it('按番号取来的封面直接进框选，默认框就是脸那一块，交框时说明框的是哪一版封面', async () => {

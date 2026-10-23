@@ -137,6 +137,13 @@ macOS 可在本机构建独立 `.app` 与 DMG，运行不需要 Python、源码�
   </picture>
 </a>
 
+## PC 集成测试版
+
+本分支提供隔离的本机启动器、单影片资料刷新、挂载目录轮询、头像分辨率选择、英文界面选项、
+DeoVR 播放入口及本机 Torrent Desk / Jackett 搜索。
+使用方式见 [PC 测试版](docs/PC_EDITION.md)、[语言与 VR](docs/PC_LANGUAGE_VR.md) 和
+[种子搜索](docs/TORRENT_DESK.md)。
+
 ## 许可证
 
 [AGPL-3.0-or-later](LICENSE) · Copyright (C) 2026 longmeidao。第三方组件保留各自的许可证。

@@ -23,6 +23,7 @@ import { DOWNLOADS_KEY, DOWNLOADS_URL } from '../activity/downloads-panel';
 import { queryClient } from '../query';
 import { fetchJavDetail, fetchJavReviews, javDetailKey, nextReviewPage, type JavDetail, type JavDetailProps, type JavEntityRef, type JavReviews } from './jav-detail';
 import { cachedReviews, rememberReviews, reviewsFresh } from './review-cache';
+import { ItemTorrentSearch } from '../item-detail/item-torrent-search';
 
 export function JavDetailPage(props: JavDetailProps) {
   const refresh = useRef(false);
@@ -98,6 +99,7 @@ function Work({ code, item, actions, readOnly, retry, retrying }: JavDetailProps
           onClick={() => window.open(item.source_url, '_blank', 'noopener,noreferrer')}>作品来源</Button> : null}
       </div>
       {want.error ? <Note tone="error">{want.error}</Note> : null}
+      <ItemTorrentSearch code={item.code} name={item.title} toast={actions.receipt} />
       <Reviews code={item.code} count={item.comments_count} released={item.release_date} />
       <Resources item={item} actions={actions} readOnly={readOnly} />
     </div></aside>

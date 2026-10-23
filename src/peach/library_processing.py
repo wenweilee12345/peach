@@ -2212,6 +2212,7 @@ def process_library(config, db_path, candidate_root, cover_root, *, location='co
     `stage` 指定处理范围：`all` 扫描并补全资料与本地预览，`scan` 只扫描，
     `collect` 补全资料与本地预览，`metadata` 只采集资料，`previews` 只生成本地预览。
     `asset_ids` 指定仍在馆藏中的视频，不扫描来源目录；空选择无效。
+    定向 `metadata` 重新读取外部资料，已有字段的差异保留为复核候选。
 
     `database` 是调用方已经在用的 `LedgerDatabase`。给了它才做收尾的自动落库与人物
     资料补齐与本地预览登记，并且与调用方共用同一把进程内写锁；不给就只采集候选。
@@ -2221,6 +2222,7 @@ def process_library(config, db_path, candidate_root, cover_root, *, location='co
     `state_file` 给后台定向任务保存独立进度，共享候选写入仍使用全库处理锁。
     """
     selected_ids = _validate_processing_request(config, db_path, stage, asset_ids, retry_ids, database)
+    refreshing = stage == METADATA_STAGE and selected_ids is not None
     routes = metadata_routes.parse_route_overrides(route_overrides)
     path = Path(state_file) if state_file is not None else state_path(config)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -2313,7 +2315,7 @@ def process_library(config, db_path, candidate_root, cover_root, *, location='co
 
         update()
         remote = _RemoteSession(config, provider_factory, _MissCache(misses_path(config)),
-                                retrying=retrying, routes=routes)
+                                retrying=retrying or refreshing, routes=routes)
         flush_candidates = lambda force=False: None
 
         try:
@@ -2394,6 +2396,7 @@ def process_library(config, db_path, candidate_root, cover_root, *, location='co
                 if local is None:
                     continue
                 code, verify_existing, payload, entries = local
+                verify_existing = verify_existing or refreshing
                 local_fields = _fields(payload, genre_decisions) if payload else {}
                 publish(row, code, local_fields, verify_existing, entries)
                 if code or payload:

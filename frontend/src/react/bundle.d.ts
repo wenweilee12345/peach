@@ -83,6 +83,7 @@ export interface PushDiscoveryQueue {
 export interface PushDiscoveryState {
   enabled: boolean;
   watch_local: boolean;
+  poll_local?: boolean;
   cloud: boolean;
   prefixes: PushDiscoveryPrefix[];
   /** 这台机器是数据库写入端才为真；只读端不起任何监听。 */

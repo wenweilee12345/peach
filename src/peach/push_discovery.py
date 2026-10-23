@@ -446,6 +446,8 @@ class PushDiscoveryConfig:
     enabled: bool = False
     #: 本地来源的文件系统事件通道。
     watch_local: bool = True
+    #: 挂载文件系统可用轮询替代原生事件；只读取目录与文件属性。
+    poll_local: bool = False
     #: CloudDrive2 通知通道。
     cloud: bool = True
     prefixes: tuple[CloudPrefix, ...] = ()
@@ -453,6 +455,7 @@ class PushDiscoveryConfig:
     def payload(self) -> dict:
         return {
             "enabled": self.enabled, "watch_local": self.watch_local, "cloud": self.cloud,
+            "poll_local": self.poll_local,
             "prefixes": [{"prefix": entry.prefix, "root": entry.root}
                          for entry in self.prefixes],
         }
@@ -512,6 +515,7 @@ class PushDiscoverySettings:
         return PushDiscoveryConfig(
             enabled=payload.get("enabled") is True,
             watch_local=payload.get("watch_local") is not False,
+            poll_local=payload.get("poll_local") is True,
             cloud=payload.get("cloud") is not False,
             prefixes=prefixes,
         )
@@ -522,6 +526,7 @@ class PushDiscoverySettings:
         config = PushDiscoveryConfig(
             enabled=body.get("enabled") is True,
             watch_local=body.get("watch_local") is not False,
+            poll_local=body.get("poll_local") is True,
             cloud=body.get("cloud") is not False,
             prefixes=_prefix_rows(body.get("prefixes"), declared_roots),
         )
@@ -726,7 +731,11 @@ class PushDiscoveryService:
             self.local_channel = ChannelState(False, f"文件监视不可用：{error}")
             return
         handler = _LocalEventHandler(self)
-        observer = Observer()
+        if self.config.poll_local:
+            from watchdog.observers.polling import PollingObserver
+            observer = PollingObserver(timeout=30)
+        else:
+            observer = Observer()
         for location, root, directory in roots:
             handler.register(location, root, directory)
             observer.schedule(handler, str(directory), recursive=True)

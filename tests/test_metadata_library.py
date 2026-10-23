@@ -2827,6 +2827,18 @@ class LibraryPreviewCompletionTests(unittest.TestCase):
         self.assertEqual(result['previews'], 0)
         self.assertEqual(result['status'], 'complete')
 
+    def test_selected_metadata_refresh_rechecks_all_fields_without_source_cache(self):
+        from peach.library_processing import COLLECTED_FIELDS
+        with patch('peach.library_processing._LocalEvidenceCache.read', return_value=('ABW-101', False, None, [])), \
+                patch('peach.library_processing._RemoteSession') as session, \
+                patch('peach.library_processing._finish_collection', return_value={}):
+            session.return_value.collect.return_value = ([], 0)
+            result = self.run_processing(stage='metadata', asset_ids=[1])
+        self.assertEqual(result['asset_ids'], [1])
+        self.assertTrue(session.call_args.kwargs['retrying'])
+        self.assertEqual(session.return_value.collect.call_args.args[2], list(COLLECTED_FIELDS))
+        self.assertEqual(session.return_value.collect.call_args.kwargs['answered'], ())
+
     def test_management_mode_keeps_collection_and_suppresses_automatic_previews(self):
         from peach.media_processing_policy import save
         save(self.config.directory('state'), True)

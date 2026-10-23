@@ -95,6 +95,7 @@ function PickerBody({ kind, entityId, name, onPicked, close }: AvatarPickerProps
   const grid = useOverlayScrollbar<HTMLDivElement>();
   const [url, setUrl] = useState('');
   const [code, setCode] = useState('');
+  const [largestFirst, setLargestFirst] = useState(true);
   /* 每一张图点开的都是框选，不是当场换图：图库人像多是全身竖图，整张装进圆框脸只占
      一小块。整屏换掉而不是再叠一层弹层：这一步要的是尽可能大的底图，而弹层套弹层只会
      让底图更小。 */
@@ -173,6 +174,11 @@ function PickerBody({ kind, entityId, name, onPicked, close }: AvatarPickerProps
           <p className="text-body-2-regular text-text-secondary">
             {cropping ? cropNote(cropping.choice) : pickerNote(name, data)}
           </p>
+          {!cropping ? <label className="flex items-center gap-2 text-body-2-regular">
+            <input type="checkbox" checked={largestFirst}
+              onChange={event => setLargestFirst(event.target.checked)} />
+            Highest resolution first
+          </label> : null}
           {index ? <Note tone="neutral">{index}</Note> : null}
           {problem ? (
             <Note tone="error" action={listingFailed ? (
@@ -205,7 +211,7 @@ function PickerBody({ kind, entityId, name, onPicked, close }: AvatarPickerProps
                 <span className="relative block w-full aspect-avatar-choice skeleton-sheen" />
                 <span className="relative mx-auto w-2/3 rounded-sm skeleton-sheen">&nbsp;</span>
               </span>
-            )) : choices.map((choice) => (
+            )) : (largestFirst ? [...choices].sort((a, b) => b.width * b.height - a.width * a.height) : choices).map((choice) => (
               <button type="button" key={choice.ref} role="option" data-avatar-choice
                 aria-selected={choice.current} title={choiceDetail(choice)} {...busyProps(busy)}
                 onClick={() => {
@@ -217,6 +223,8 @@ function PickerBody({ kind, entityId, name, onPicked, close }: AvatarPickerProps
                 <ChoiceImage src={choiceImageUrl(kind, entityId, choice.ref, baseVersion(choice, choice.ref))}
                   choice={choice} />
                 <span className="truncate px-1">{choice.label}</span>
+                <span className="px-1 text-caption-1-regular">{choice.width && choice.height
+                  ? `${choice.width} × ${choice.height}` : 'Resolution unknown'}</span>
                 {choice.current
                   ? <span className="absolute top-1 left-1"><Chip variant="caption" color="gray">在用</Chip></span>
                   : null}

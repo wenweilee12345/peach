@@ -175,6 +175,8 @@ def w_library_processing(contract, body, *, resume=False):
         return _control_action(contract, config, body)
     previous = _current(contract)
     if previous.get('status') in ACTIVE and not resume:
+        if (body or {}).get('asset_ids') is not None:
+            raise ValueError('已有处理任务正在运行，请先完成或暂停当前任务，再刷新所选影片资料')
         return previous
     retry_ids, asset_ids, stage = _processing_request(contract, config, previous, body)
     if retry_ids is not None and not retry_ids:

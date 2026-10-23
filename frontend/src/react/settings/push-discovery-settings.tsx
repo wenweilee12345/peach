@@ -58,7 +58,8 @@ export function PushDiscoveryForm({ initial, receipt }: {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const body = {
-      enabled: state.enabled, watch_local: state.watch_local, cloud: state.cloud, prefixes: rows,
+      enabled: state.enabled, watch_local: state.watch_local, poll_local: !!state.poll_local,
+      cloud: state.cloud, prefixes: rows,
     };
     void action.run('save', (signal) => apiSend<PushDiscoveryState>(SAVE_URL, body, 'POST', signal),
       (next) => settle(next, '已保存配置'), (cause) => setFailure(errorMessage(cause)));
@@ -85,6 +86,12 @@ export function PushDiscoveryForm({ initial, receipt }: {
           <Switch aria-label="监视本机文件夹" isSelected={state.watch_local}
             isDisabled={!state.available || !state.enabled}
             onChange={(watchLocal) => setState({ ...state, watch_local: watchLocal })} />
+        </SettingsRow>
+        <SettingsRow label="Poll mounted folders every 30 seconds"
+          description="Use for AllDebrid/rclone mounts that do not emit file-change events.">
+          <Switch aria-label="Poll mounted folders" isSelected={!!state.poll_local}
+            isDisabled={!state.available || !state.enabled || !state.watch_local}
+            onChange={(poll) => setState({ ...state, poll_local: poll })} />
         </SettingsRow>
         <SettingsRow label="接收 CloudDrive2 通知">
           <Switch aria-label="接收 CloudDrive2 通知" isSelected={state.cloud}

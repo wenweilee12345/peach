@@ -107,3 +107,17 @@ class TorrentDeskTests(unittest.TestCase):
         with TestClient(app) as client:
             result = client.post('/api/torrent-desk/configuration', json={"api_key": "private"})
         self.assertEqual(result.status_code, 403)
+
+    def test_mutation_routes_reject_cross_origin_before_service_calls(self):
+        from types import SimpleNamespace
+        app = FastAPI()
+        app.include_router(create_router(lambda: None))
+        app.state.settings = SimpleNamespace(token='', secrets_root=Path(self.directory.name).resolve())
+        with TestClient(app) as client:
+            for route, body in [('submit', {'magnet': 'a' * 40}),
+                                ('configuration', {'api_key': 'private'}), ('search', {'q': 'ABC-123'})]:
+                with self.subTest(route=route):
+                    result = client.post('/api/torrent-desk/' + route, json=body,
+                                         headers={'origin': 'https://untrusted.example', 'sec-fetch-site': 'cross-site'})
+                    self.assertEqual(result.status_code, 403)
+        self.assertFalse(self.store.load('torrent-desk'))

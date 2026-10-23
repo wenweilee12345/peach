@@ -322,7 +322,8 @@ def _run(contract, key: str, handle) -> dict:
             contract, connection, providers_root, avatar_root, kind, entity_id, name, found, covers)
         if preferred is not None:
             return preferred
-        if _installed_record(avatar_root, kind, entity_id).get("source_kind") == "official_profile":
+        if (_installed_record(avatar_root, kind, entity_id).get("source_kind") == "official_profile"
+                and not small):
             return {"name": name, "outcome": gallery, **extra}
         fallen = {**_install_cover_face(contract, providers_root, avatar_root, kind,
                                         entity_id, name, gallery, len(found), cropped_px,
@@ -616,6 +617,8 @@ def _install(contract, connection, providers_root, avatar_root, kind: str,
     size = f"{inspected.width}×{inspected.height}"
     if not acceptable_avatar(inspected, MIN_LONG_SIDE, MIN_SHORT_SIDE):
         return {"name": name, "outcome": "图太小", "matched": 1, "size": size}
+    if not sharper_than_installed(avatar_root, kind, entity_id, inspected):
+        return {"name": name, "outcome": "已有更清楚的头像", "size": size}
     avatar_picker.install(providers_root, avatar_root, kind, entity_id, body, origin)
     contract.cache_bust()
     return {"name": name, "outcome": "已装上", "matched": 1, "size": size,
@@ -653,6 +656,8 @@ def _install_small(contract, connection, providers_root, avatar_root, kind: str,
     size = f"{winner.inspected.width}×{winner.inspected.height}"
     if winner.inspected.sha256 == avatar_picker.installed_digest(avatar_root, kind, entity_id):
         return {**fallen, "outcome": "已装着认得准的小图", "size": size}
+    if not sharper_than_installed(avatar_root, kind, entity_id, winner.inspected):
+        return fallen
     origin = {**winner.origin, "source_kind": SMALL_SOURCE_KIND,
               **({"name_source": "face-match", "face_match": evidence} if evidence else {})}
     avatar_picker.install(providers_root, avatar_root, kind, entity_id, winner.body, origin)
@@ -689,12 +694,32 @@ def _install_cover_face(contract, providers_root, avatar_root, kind: str,
     if cut is None:
         return {**summary, "outcome": "封面截不出这一块", "source": face.code}
     body, origin = cut
+    candidate = avatar_picker.accept_image(body)
+    if cropped_px is None and not sharper_than_installed(avatar_root, kind, entity_id, candidate):
+        return {**summary, "outcome": "已有更清楚的头像", "source": face.code}
     inspected = avatar_picker.install(providers_root, avatar_root, kind, entity_id,
                                       body, origin)
     contract.cache_bust()
     return {**summary, "outcome": "已装上",
             "size": f"{inspected['width']}×{inspected['height']}",
             "source": f"作品封面 {face.code}"}
+
+
+def sharper_than_installed(avatar_root, kind: str, entity_id: int, candidate) -> bool:
+    """保留人工选择；可信人像可替换裁脸图，其余要求像素面积增加且短边不降低。"""
+    if _installed_record(avatar_root, kind, entity_id).get('user_selected'):
+        return False
+    record = _installed_record(avatar_root, kind, entity_id)
+    if record.get('provider') == 'cover-face':
+        return True
+    from .previews import entity_image_key
+    path = Path(avatar_root) / f'{entity_image_key(kind, entity_id)}.img'
+    try:
+        current = avatar_picker.accept_image(path.read_bytes())
+    except (OSError, avatar_picker.PickerError):
+        return True
+    return (candidate.width * candidate.height > current.width * current.height
+            and min(candidate.width, candidate.height) >= min(current.width, current.height))
 
 
 def _install_offsite(contract, connection, providers_root, avatar_root, kind: str,

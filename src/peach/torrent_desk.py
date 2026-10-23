@@ -21,6 +21,16 @@ PROVIDER = "torrent-desk"
 MAX_BYTES = 3_000_000
 
 
+def magnet_hash(item):
+    """按 Torznab 字段顺序读取已有哈希，不请求种子链接。"""
+    for value in (item.magnet_url, item.infohash, item.link, item.guid):
+        try:
+            return parse_magnet(value or "").info_hash
+        except ValueError:
+            pass
+    return None
+
+
 class TorrentDesk:
     def __init__(self, credentials: CredentialStore, *, transport=None):
         self.credentials = credentials
@@ -101,13 +111,7 @@ class TorrentDesk:
                         code = release_code_from_text(query)
                         if code and not same_release_code(scan_code(str(item.title or "")), code):
                             continue
-                        info_hash = None
-                        for value in (item.magnet_url, item.infohash, item.link, item.guid):
-                            try:
-                                info_hash = parse_magnet(value or "").info_hash
-                                break
-                            except ValueError:
-                                pass
+                        info_hash = magnet_hash(item)
                         if not info_hash and item.link and budget > 0:
                             budget -= 1
                             info_hash = _torrent_hash(client, source, item.link, deadline)
