@@ -140,7 +140,7 @@ macOS 可在本机构建独立 `.app` 与 DMG，运行不需要 Python、源码�
 ## PC 集成测试版
 
 本分支提供隔离的本机启动器、单影片资料刷新、挂载目录轮询、头像分辨率选择、英文界面选项、
-DeoVR 播放入口及本机 Torrent Desk / Jackett 搜索。
+DeoVR 播放入口及本机 Torrent Desk / Jackett 搜索。主搜索未命中馆藏时自动查询种子，已确认广告的匹配副本隐藏。
 使用方式见 [PC 测试版](docs/PC_EDITION.md)、[语言与 VR](docs/PC_LANGUAGE_VR.md) 和
 [种子搜索](docs/TORRENT_DESK.md)。
 

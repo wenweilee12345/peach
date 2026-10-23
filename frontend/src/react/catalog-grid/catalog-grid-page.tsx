@@ -27,6 +27,7 @@ import { finiteWallFilters, wallHasCover } from '../video-wall/wall-layout';
 import { LibraryCompletionPrompt, missingPreviewIds } from '../library-processing/library-completion';
 import { useCatalogView } from './catalog-view';
 import { CatalogListPage } from './catalog-list-page';
+import { CatalogEmpty, catalogTorrentQuery } from './catalog-empty';
 
 export function CatalogGridPage(props: CatalogGridProps) {
   const view = useCatalogView();
@@ -136,6 +137,9 @@ function GridBody(props: CatalogGridProps) {
     );
 
   const content = () => {
+    if (result.isSuccess && !tiles.length && total === 0 && catalogTorrentQuery(props)) {
+      return <CatalogEmpty props={props} libraryEmpty={!!result.data.pages[0]?.libraryEmpty} />;
+    }
     if (wallAvailable && props.wall) return <VideoWall
       key={finiteWall ? 'finite' : 'explore'}
       sessionKey={entity ? `entity:${props.entityKey || ''}` : `catalog:${catalogParams(props.filters || {}, !!props.excludeVertical)}`}
@@ -152,8 +156,7 @@ function GridBody(props: CatalogGridProps) {
       return <RetryNote message={requestErrorMessage(result.error)} onRetry={() => void result.refetch()} />;
     }
     if (!tiles.length) {
-      const html = props.emptyHtml?.({ trash, libraryEmpty: !!result.data.pages[0]?.libraryEmpty }) || '';
-      return <div data-media-empty="" dangerouslySetInnerHTML={{ __html: html }} />;
+      return <CatalogEmpty props={props} libraryEmpty={!!result.data.pages[0]?.libraryEmpty} />;
     }
     return (
       <>

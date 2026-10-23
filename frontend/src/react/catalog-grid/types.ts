@@ -142,6 +142,7 @@ export interface CatalogGridProps {
   onCountFailed?(): void;
   /** 空态 HTML。`libraryEmpty` 是整个馆藏都还没有作品。 */
   emptyHtml?(state: { trash: boolean; libraryEmpty: boolean }): string;
+  receipt?(message: string): void;
   /** 此刻能不能自动续页：管理区或索引页盖在目录上时不续。 */
   canLoadMore?(): boolean;
 

@@ -7,7 +7,7 @@ import { after, before, describe, it } from 'node:test';
 
 import type { Browser, Page } from 'playwright-core';
 
-import { launch, VIEWPORTS } from './harness.ts';
+import { launch, layout, VIEWPORTS } from './harness.ts';
 import { openItemPage, type ItemVisit } from './item-fixture.ts';
 
 const DESKTOP = VIEWPORTS.find((viewport) => !viewport.mobile)!;
@@ -82,6 +82,36 @@ describe('顶栏搜索', () => {
   let browser: Browser;
   before(async () => { browser = await launch(); });
   after(async () => { await browser?.close(); });
+
+  for (const viewport of VIEWPORTS) {
+    it(`${viewport.name} 主搜索缺少馆藏影片时自动展示种子候选`, { timeout: 60_000 }, async () => {
+      const opened = await openSearch(browser, { viewport });
+      try {
+        const { page } = opened;
+        let searches = 0;
+        let submissions = 0;
+        await page.route('**/api/items?*', route => new URL(route.request().url()).searchParams.get('q') === 'IPZZ-823'
+          ? route.fulfill({ json: { items: [], total: 0 } }) : route.fallback());
+        await page.route('**/api/torrent-desk/status', route => route.fulfill({ json: { connected: true, sources: [{ id: 'jackett', name: 'Jackett' }] } }));
+        await page.route('**/api/torrent-desk/search', route => {
+          searches++;
+          assert.equal(route.request().postDataJSON().q, 'IPZZ-823');
+          return route.fulfill({ json: { items: [{ id: 'one', name: 'IPZZ-823 matching torrent', seeders: 3,
+            size: 1234567890, source: 'Jackett', uri: 'magnet:?xt=urn:btih:' + 'a'.repeat(40) }], warnings: [] } });
+        });
+        await page.route('**/api/torrent-desk/submit', route => { submissions++; return route.fulfill({ json: { ok: true } }) });
+        if (viewport.mobile) await page.locator('#searchBtn').click();
+        await page.locator('#q').fill('IPZZ-823');
+        await page.locator('#q').press('Enter');
+        await page.locator('[data-torrent-fallback]').getByText('IPZZ-823 matching torrent', { exact: true }).waitFor();
+        assert.equal(searches, 1);
+        assert.equal(submissions, 0);
+        assert.deepEqual((await layout(page)).offenders, []);
+        assert.deepEqual(opened.problems, []);
+        await page.screenshot({ path: `../build/agent-verification/browser/main-search-torrents-${viewport.name}.png` });
+      } finally { await opened.close() }
+    });
+  }
 
   for (const viewport of VIEWPORTS) {
     it(`${viewport.name} 收起输入法保留搜索建议，焦点移出搜索区或点击页面关闭`, { timeout: 60_000 }, async () => {

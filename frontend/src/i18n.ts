@@ -13,6 +13,8 @@ export function setLocale(locale: Locale): void {
 }
 
 export const ENGLISH: Readonly<Record<string, string>> = {
+  '媒体库中没有匹配的影片。': 'No matching video in your library.',
+  '媒体库查询失败': 'Could not check the library',
   '首页': 'Home', '艺人': 'Performers', '厂牌': 'Studios', '标签': 'Tags',
   '已标记': 'Bookmarked', '播放列表': 'Playlists', '关注': 'Following', '沉浸模式': 'Immersive mode',
   '管理': 'Manage', '统计': 'Statistics', '口味': 'Preferences', '人工复核': 'Review',

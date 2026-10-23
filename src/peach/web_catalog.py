@@ -162,7 +162,17 @@ AGENCY_SEARCH_CLAUSE = (
 #: （`disposal` 为空，ADR-0087）。列表、搜索和补全
 #: 共用这一份。各写各的后果是补全会补出回收站里的作品——那一条点开是已经删掉的片，
 #: 而列表本身从来不显示它，所以只会在补全这一个表面上露出来。
-VISIBLE_CATALOG_ASSET = "a.medium='video' AND a.disposal IS NULL"
+# 用户隔离过的短小广告按整名与精确字节数识别副本；还原或明确驳回垃圾判断可恢复显示。
+REPEATED_JUNK_COPY = """(
+    a.feedback_at IS NULL AND a.name IS NOT NULL AND a.size IS NOT NULL
+    AND COALESCE(a.duration,0) BETWEEN 0 AND 30
+    AND (a.name,a.size) IN (
+        SELECT name,size FROM asset WHERE disposal='trash' AND disposal_reason='junk'
+        AND medium='video' AND size BETWEEN 1 AND 4194304 AND duration BETWEEN 0 AND 30)
+    AND NOT EXISTS (SELECT 1 FROM review_decision r WHERE r.category='junk_file'
+        AND r.item_key=CAST(a.id AS TEXT) AND r.status='rejected')
+)"""
+VISIBLE_CATALOG_ASSET = "a.medium='video' AND a.disposal IS NULL AND NOT " + REPEATED_JUNK_COPY
 
 
 def region_filter(value, trash: bool) -> tuple[list[str], list[str]]:

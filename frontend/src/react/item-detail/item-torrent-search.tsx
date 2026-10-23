@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { confirmModal } from '@peach/legacy/ui';
-import { apiGet, apiSend } from '../../api';
+import { apiGet, apiSend, errorMessage } from '../../api';
+import { queryClient } from '../query';
 import { ErrorText, Help, Stack } from '../settings/section';
 import { busyProps, useAction } from '../settings/use-action';
 
@@ -15,26 +17,52 @@ export function torrentQuery(code: string | undefined, name: string): string {
   return code || name.match(/(?:FC2[-_ ]?(?:PPV[-_ ]?)?\d{5,8}|[A-Z]{2,10}[-_]\d{2,7})/i)?.[0].replaceAll('_', '-') || name;
 }
 
-export function ItemTorrentSearch({ code, name, toast }: { code?: string; name: string; toast(message: string): void }) {
-  const [open, setOpen] = useState(false);
+export function ItemTorrentSearch({ code, name, toast, autoSearch = false }: {
+  code?: string; name: string; toast(message: string): void; autoSearch?: boolean;
+}) {
+  const [open, setOpen] = useState(autoSearch);
   const [query, setQuery] = useState(() => torrentQuery(code, name));
+  const [automaticQuery] = useState(query);
+  const [manualSearch, setManualSearch] = useState(false);
   const [source, setSource] = useState('');
-  const [status, setStatus] = useState<DeskStatus | null>(null);
-  const [result, setResult] = useState<SearchResult | null>(null);
+  const [savedStatus, setStatus] = useState<DeskStatus | null>(null);
+  const [savedResult, setResult] = useState<SearchResult | null>(null);
   const [queue, setQueue] = useState<QueueItem[] | null>(null);
   const [key, setKey] = useState('');
   const [submitted, setSubmitted] = useState<string[]>([]);
   const action = useAction();
+  const automatic = useQuery({
+    queryKey: ['torrent-desk', 'automatic-search', automaticQuery], enabled: autoSearch,
+    staleTime: 60_000, retry: false, refetchOnWindowFocus: false,
+    queryFn: async ({ signal }) => {
+      const [status, result] = await Promise.all([
+        apiGet<DeskStatus>('/api/torrent-desk/status', signal),
+        apiSend<SearchResult>('/api/torrent-desk/search', { q: automaticQuery }, 'POST', signal),
+      ]);
+      return { status, result };
+    },
+  }, queryClient);
+  const status = savedStatus ?? automatic.data?.status;
+  const result = manualSearch ? savedResult : savedResult ?? automatic.data?.result;
+  const searching = action.busy === 'search' || automatic.isFetching;
+  const error = action.error || (!manualSearch && automatic.error ? errorMessage(automatic.error) : '');
   const refresh = () => void action.run('status', signal => apiGet<DeskStatus>('/api/torrent-desk/status', signal), setStatus);
   const search = () => {
-    if (action.busy || query.trim().length < 2) return;
+    if (action.busy || automatic.isFetching || query.trim().length < 2) return;
+    setManualSearch(true);
     setResult(null);
-    void action.run('search', signal => apiSend<SearchResult>('/api/torrent-desk/search', { q: query.trim(), source }, 'POST', signal), setResult);
+    void action.run('search', async signal => {
+      const [nextStatus, nextResult] = await Promise.all([
+        status ? Promise.resolve(status) : apiGet<DeskStatus>('/api/torrent-desk/status', signal),
+        apiSend<SearchResult>('/api/torrent-desk/search', { q: query.trim(), source }, 'POST', signal),
+      ]);
+      return { status: nextStatus, result: nextResult };
+    }, next => { setStatus(next.status); setResult(next.result) });
   };
   return <details open={open} onToggle={event => {
     const next = event.currentTarget.open;
     setOpen(next);
-    if (next && !status && !action.busy) refresh();
+    if (next && !autoSearch && !status && !action.busy) refresh();
   }}>
     <summary>Search torrents · Torrent Desk / Jackett</summary>
     <Stack>
@@ -47,11 +75,11 @@ export function ItemTorrentSearch({ code, name, toast }: { code?: string; name: 
         </select>
       </label> : null}
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" disabled={query.trim().length < 2} {...busyProps(action.busy === 'search')} onClick={search}>
-          {action.busy === 'search' ? 'Searching torrents…' : 'Search torrents'}</Button>
+        <Button variant="secondary" disabled={query.trim().length < 2} {...busyProps(searching)} onClick={search}>
+          {searching ? 'Searching torrents…' : 'Search torrents'}</Button>
         <Button variant="secondary" {...busyProps(action.busy === 'status')} onClick={() => { if (!action.busy) refresh() }}>Check connection</Button>
       </div>
-      {action.error ? <ErrorText>{action.error}</ErrorText> : null}
+      {error ? <ErrorText>{error}</ErrorText> : null}
       {result?.warnings.map(message => <Help key={message}>{message}</Help>)}
       {result && !result.items.length ? <Help role="status">No matching torrents. Try another catalog code or indexer.</Help> : null}
       {result?.items.map(row => <div key={row.id} className="flex min-w-0 flex-col gap-2 border-t border-separator-border pt-3 wrap-anywhere">

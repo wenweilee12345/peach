@@ -19,6 +19,7 @@ import { RetryNote } from '../components/grid-reveal';
 import { LibraryCompletionPrompt, missingPreviewIds } from '../library-processing/library-completion';
 import { catalogParams } from './catalog-grid';
 import type { CatalogGridProps, MediaItem, MediaPage } from './types';
+import { CatalogEmpty, catalogTorrentQuery } from './catalog-empty';
 import './catalog-list.css';
 
 const features = tableFeatures({ rowSortingFeature, rowSelectionFeature, rowPaginationFeature });
@@ -118,6 +119,9 @@ export function CatalogListPage(props: CatalogGridProps) {
       }
     },
   });
+  if (result.isSuccess && !result.isPlaceholderData && !result.isFetching && total === 0 && !items.length && catalogTorrentQuery(props)) {
+    return <CatalogEmpty props={props} />;
+  }
   return <div data-catalog-view-mode="list" data-catalog-table="" aria-busy={result.isFetching || undefined} className="flex min-w-0 flex-col gap-4">
     <div className="flex flex-wrap justify-end gap-2" role="toolbar" aria-label="作品列表工具栏">
       <DataTableSort label="作品列表" options={sortOptions} sorting={sorting}

@@ -459,6 +459,7 @@ export function catalogGridProps(){
     wall:path==='/wall',
     selectMode,selected:new Set(selected),seekSeconds:preferencesState.appSettings.seekSeconds,revision:catalogState.controller.revision,
     wireDrag,settled:settleCatalog,
+    receipt:message=>receiptsState.actionReceipt(message),
     skeletonHtml:()=>catalogSkeletonHtml(),
     filters:{...state},batchSize:preferencesState.appSettings.batchSize,groupCollapse:preferencesState.appSettings.groupCollapse,
     /* 只有首页默认列表排除竖屏——那里另有独立的竖屏带承接它们。搜索必须能搜到竖屏作品，

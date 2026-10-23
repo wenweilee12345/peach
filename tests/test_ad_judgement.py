@@ -219,6 +219,31 @@ class ResourceJunkQueueTests(unittest.TestCase):
             self.assertLess(row["score"], web_batch.AUTO_TRASH_SCORE)
         self.assertEqual(web_batch.automatic_junk_candidates(self.contract), [])
 
+    def test_confirmed_short_promo_copies_are_hidden_and_can_be_restored(self):
+        name = '18+游戏大全(996gg.cc)-七龍珠H版-三國志H版-三國群淫傳等.mp4'
+        for identity in (80, 81, 82):
+            self.add(identity, 'local', f'F:\\media\\{identity}\\{name}', 'video', 2001226, 11)
+        w_batch(self.contract, {'ids': [80], 'operation': 'dispose', 'disposal_reason': 'junk'})
+        self.assertEqual(q_items(self.contract, {})['total'], 0)
+        self.assertEqual(q_items(self.contract, {'state': 'trash'})['total'], 1)
+        w_batch(self.contract, {'ids': [80], 'operation': 'restore'})
+        self.assertEqual(q_items(self.contract, {})['total'], 3)
+        w_batch(self.contract, {'ids': [80], 'operation': 'dispose', 'disposal_reason': 'junk'})
+        w_batch(self.contract, {'ids': [81], 'operation': 'dismiss-junk'})
+        self.assertEqual([item['id'] for item in q_items(self.contract, {})['items']], [81])
+        w_batch(self.contract, {'ids': [82], 'operation': 'dispose', 'disposal_reason': 'junk'})
+        w_batch(self.contract, {'ids': [82], 'operation': 'restore'})
+        self.assertEqual(set(item['id'] for item in q_items(self.contract, {})['items']), {81, 82})
+
+    def test_confirmed_promo_copy_filter_preserves_different_sizes_and_long_videos(self):
+        name = 'promo.mp4'
+        self.add(80, 'local', 'F:\\media\\a\\' + name, 'video', 2000, 11)
+        self.add(81, 'local', 'F:\\media\\b\\' + name, 'video', 3000, 11)
+        self.add(82, 'local', 'F:\\media\\c\\' + name, 'video', 2000, 3600)
+        self.add(83, 'local', 'F:\\media\\d\\' + name, 'video', None, None)
+        w_batch(self.contract, {'ids': [80], 'operation': 'dispose', 'disposal_reason': 'junk'})
+        self.assertEqual(set(item['id'] for item in q_items(self.contract, {})['items']), {81, 82, 83})
+
     def test_non_video_trash_items_remain_visible_and_recoverable(self):
         self.add(10, "115", r"B:\番号\广告图.jpg", "image", disposal="trash")
         self.add(11, "115", r"B:\番号\备用网址.url", "other", disposal="trash")
