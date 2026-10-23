@@ -26,7 +26,9 @@ class LibraryShortcutsTests(unittest.TestCase):
                 CREATE TABLE entity_redirect(old_id INTEGER,target_id INTEGER);
                 CREATE TABLE entity_alias(entity_id INTEGER,alias TEXT);
                 INSERT INTO entity_alias VALUES(3,'故事');
-                CREATE TABLE asset(id INTEGER PRIMARY KEY,medium TEXT,disposal TEXT,size INTEGER,snapshot_path TEXT);
+                CREATE TABLE asset(id INTEGER PRIMARY KEY,medium TEXT,disposal TEXT,size INTEGER,snapshot_path TEXT,
+                    name TEXT,disposal_reason TEXT,duration REAL,feedback_at TEXT);
+                CREATE TABLE review_decision(category TEXT,item_key TEXT,status TEXT);
                 CREATE TABLE asset_entity(asset_id INTEGER,entity_id INTEGER,role TEXT);
             """)
         self.contract = WebContract(self.path)
@@ -75,7 +77,7 @@ class LibraryShortcutsTests(unittest.TestCase):
 
     def test_favorites_include_entity_art_logos_and_available_representatives(self):
         with closing(sqlite3.connect(self.path)) as c, c:
-            c.execute("INSERT INTO asset VALUES(10,'video',NULL,100,'sample.jpg')")
+            c.execute("INSERT INTO asset(id,medium,disposal,size,snapshot_path) VALUES(10,'video',NULL,100,'sample.jpg')")
             c.execute("INSERT INTO asset_entity VALUES(10,3,'tag')")
         with mock.patch.object(WebContract, 'has_logo', return_value=True), \
                 mock.patch.object(WebContract, 'logo_version', return_value='logo-v'), \
@@ -88,6 +90,22 @@ class LibraryShortcutsTests(unittest.TestCase):
         with closing(sqlite3.connect(self.path)) as c:
             stored = json.loads(c.execute('SELECT settings_json FROM profile').fetchone()[0])
         self.assertNotIn('image_url', stored['libraryShortcuts']['favorites'][0])
+
+    def test_favorite_uses_a_visible_representative_and_respects_a_restored_copy(self):
+        with closing(sqlite3.connect(self.path)) as c, c:
+            c.executemany("INSERT INTO asset(id,medium,name,size,duration,disposal,disposal_reason,snapshot_path) "
+                          "VALUES(?,'video',?,100,10,?,?,?)", [
+                (10, 'promo.mp4', 'trash', 'junk', 'junk.jpg'),
+                (11, 'promo.mp4', None, None, 'copy.jpg'),
+                (12, 'film.mp4', None, None, 'film.jpg'),
+            ])
+            c.executemany("INSERT INTO asset_entity VALUES(?,3,'tag')", [(11,), (12,)])
+        with mock.patch.object(WebContract, 'has_avatar', return_value=True):
+            favorite = self.write(action='favorite', entity_id=3, on=True)['favorites'][0]
+            self.assertEqual(favorite['image_url'], '/avatar?id=12')
+            with closing(sqlite3.connect(self.path)) as c, c:
+                c.execute("UPDATE asset SET feedback_at='2026-10-24' WHERE id=11")
+            self.assertEqual(self.read()['favorites'][0]['image_url'], '/avatar?id=11')
 
     def test_creator_favorite_projects_bound_official_and_archive_avatars(self):
         from peach.web_catalog import entity_ref
