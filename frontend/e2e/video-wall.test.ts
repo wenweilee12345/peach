@@ -552,7 +552,10 @@ describe('播放墙的浏览与详情', () => {
     const opened = await visit(browser, '/wall?q=不会匹配的查询', VIEWPORTS[0]!);
     const { page } = opened;
     try {
+      await page.route('**/api/torrent-desk/status', route => route.fulfill({ json:{ connected:false, sources:[] } }));
+      await page.route('**/api/torrent-desk/search', route => route.fulfill({ json:{ items:[], warnings:[] } }));
       await page.locator('[data-wall-empty]').waitFor();
+      await page.locator('[data-wall-empty] [data-torrent-fallback]').waitFor();
       await addWallCovers(page);
       assert.equal(await page.locator('[data-wall-tile]').count(), 0);
       assert.equal(await page.getByRole('button', { name:'退出播放墙' }).isVisible(), true);

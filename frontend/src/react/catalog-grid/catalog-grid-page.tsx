@@ -137,9 +137,6 @@ function GridBody(props: CatalogGridProps) {
     );
 
   const content = () => {
-    if (result.isSuccess && !tiles.length && total === 0 && catalogTorrentQuery(props)) {
-      return <CatalogEmpty props={props} libraryEmpty={!!result.data.pages[0]?.libraryEmpty} />;
-    }
     if (wallAvailable && props.wall) return <VideoWall
       key={finiteWall ? 'finite' : 'explore'}
       sessionKey={entity ? `entity:${props.entityKey || ''}` : `catalog:${catalogParams(props.filters || {}, !!props.excludeVertical)}`}
@@ -147,6 +144,8 @@ function GridBody(props: CatalogGridProps) {
       loading={result.isPending || (!result.data && result.isFetching)}
       error={!result.data && !result.isPending ? requestErrorMessage(result.error) : ''}
       retry={() => void result.refetch()}
+      emptyContent={result.isSuccess && !tiles.length && catalogTorrentQuery(props)
+        ? <CatalogEmpty props={props} libraryEmpty={!!result.data.pages[0]?.libraryEmpty} /> : undefined}
       emptyHtml={result.data && !wallPool.length ? tiles.length
         ? emptyStateHtml('image', '这批作品没有封面', result.hasNextPage ? '载入更多作品后继续浏览。' : '换个筛选范围再试。')
         : props.emptyHtml?.({ trash, libraryEmpty:!!result.data.pages[0]?.libraryEmpty }) : ''}

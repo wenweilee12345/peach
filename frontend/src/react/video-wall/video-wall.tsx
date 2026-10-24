@@ -1,4 +1,4 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Radio } from 'react-aria-components';
 import { useQuery } from '@tanstack/react-query';
@@ -33,6 +33,7 @@ interface VideoWallProps {
   error?: string;
   retry?(): void;
   emptyHtml?: string;
+  emptyContent?: ReactNode;
   loadMore(): Promise<void>;
   actions: MediaCardActions;
   helpers: MediaCardHelpers;
@@ -60,7 +61,7 @@ const WallArtwork = memo(function WallArtwork({ item, image, big = false, ratio 
 });
 
 /** 单一播放宿主常驻在墙内，视口裁剪只影响海报磁贴。 */
-export function VideoWall({ items, finite, hasMore, busy, loading = false, error: queryError = '', retry, emptyHtml = '', loadMore, actions, helpers, javImage, sessionKey }: VideoWallProps) {
+export function VideoWall({ items, finite, hasMore, busy, loading = false, error: queryError = '', retry, emptyHtml = '', emptyContent, loadMore, actions, helpers, javImage, sessionKey }: VideoWallProps) {
   const pool = String(items[0]?.id);
   const [session] = useState(() => {
     const saved = wallSessions.get(sessionKey);
@@ -414,7 +415,9 @@ export function VideoWall({ items, finite, hasMore, busy, loading = false, error
       </div>
     </div>
     {!loading && queryError ? <div data-wall-error=""><Note tone="error">{queryError}</Note><Button size="small" variant="ghost" onClick={retry}>重试</Button></div> : null}
-    {!loading && !queryError && !items.length ? <div data-wall-empty="" dangerouslySetInnerHTML={{ __html:emptyHtml }} /> : null}
+    {!loading && !queryError && !items.length ? <div data-wall-empty="">
+      {emptyContent ?? <div dangerouslySetInnerHTML={{ __html:emptyHtml }} />}
+    </div> : null}
     {!finite && (hasMore || items.length > 0) ? <div data-wall-refresh=""><Shuffle busy={busy} onPress={() => void fresh()} /></div> : null}
     {hasMore && finite ? <div data-wall-footer=""><Button size="small" variant="secondary" {...busyProps(busy)} onClick={() => void more()}>
       {busy ? <span dangerouslySetInnerHTML={{ __html:spinnerHtml() }} /> : null}载入更多</Button></div> : null}

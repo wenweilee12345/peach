@@ -28,6 +28,7 @@ body[data-wall-open] :is(body>header,#drawer,#main,#catalogFilter,#count,#javLib
 .peach-react [data-video-wall][data-refreshing] [data-wall-viewport] { filter:blur(8px) grayscale(1); pointer-events:none; }
 .peach-react [data-wall-skeleton] { position:absolute; display:block; left:var(--wall-left); top:var(--wall-top); width:var(--wall-width); height:var(--wall-height); background:rgba(247,244,238,.06); }
 .peach-react :is([data-wall-error],[data-wall-empty]) { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(420px,calc(100% - 48px)); z-index:7; }
+.peach-react [data-wall-empty] { max-height:calc(100dvh - 176px); overflow-y:auto; overscroll-behavior:contain; }
 .peach-react [data-wall-error] { display:flex; flex-direction:column; gap:12px; }
 .peach-react [data-wall-tile] {
   left:var(--wall-left); top:var(--wall-top); width:var(--wall-width); height:var(--wall-height);
