@@ -5,6 +5,10 @@
 准备锁定的 Python 环境和前端依赖后，在 PowerShell 运行 `scripts/start_pc_edition.ps1`。
 控制台显示访问地址、媒体目录和首次登录口令。再次启动保留当前设置；关闭该进程即可停止。
 
+局域网访问使用 `scripts/start_pc_edition.ps1 -ListenAddress 0.0.0.0`，其他设备打开
+`http://<电脑的局域网 IPv4>:8910`，使用同一个登录口令。Windows 防火墙须允许本地子网访问
+TCP 8910；Torrent Desk 与 Jackett 继续由 Peach 服务端通过本机回环连接。
+
 ## 单影片资料
 
 作品详情始终提供 `Refresh metadata — this video only`，支持已存在封面及没有番号的 STRM 条目。

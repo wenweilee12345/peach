@@ -1,5 +1,9 @@
 [CmdletBinding()]
-param([int]$Port = 8910, [string]$DataRoot, [string]$MediaRoot)
+param(
+    [int]$Port = 8910, [string]$DataRoot, [string]$MediaRoot,
+    [ValidateSet('127.0.0.1', '0.0.0.0')]
+    [string]$ListenAddress = '127.0.0.1'
+)
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $commonDirectory = (& git -C $projectRoot rev-parse --path-format=absolute --git-common-dir).Trim()
@@ -31,5 +35,5 @@ if (-not (Get-Command openssl.exe -ErrorAction SilentlyContinue)) {
 Set-Location -LiteralPath $projectRoot
 & $pythonPath -X utf8 (Join-Path $PSScriptRoot 'prepare_pc_edition.py') --data-root $DataRoot --media-root $MediaRoot --port $Port
 if ($LASTEXITCODE -ne 0) { throw 'PC initialization failed.' }
-& $pythonPath -X utf8 -m peach.server --host 127.0.0.1 --port $Port
+& $pythonPath -X utf8 -m peach.server --host $ListenAddress --port $Port
 exit $LASTEXITCODE

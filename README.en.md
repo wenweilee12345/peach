@@ -144,6 +144,7 @@ polling, portrait resolution controls, an English UI option, DeoVR playback link
 Torrent Desk / Jackett search with explicit AllDebrid submission. Main search falls back to torrents
 for missing titles, and matching copies of confirmed promotional clips are hidden.
 The Torrent Desk sidebar tab provides independent search, cloud queue management, and Peach library controls.
+Pass `-ListenAddress 0.0.0.0` to the PC launcher to enable password-protected LAN access.
 See [PC setup](docs/PC_EDITION.md), [language and VR](docs/PC_LANGUAGE_VR.md), and [torrent search](docs/TORRENT_DESK.md).
 
 ## License
