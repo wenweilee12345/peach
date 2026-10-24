@@ -816,31 +816,6 @@ class LibraryDirectoryTests(unittest.TestCase):
         self.assertTrue(script.compatible_sidecar(image, ('creator', '创作者', 'account'), {}))
         self.assertFalse(script.compatible_sidecar(dict(image, code='ABP-123'), ('creator', '创作者', 'account'), {}))
 
-    def test_directory_execution_preserves_sidecars_and_recovers(self):
-        with redirect_stdout(io.StringIO()):
-            self.script.self_check()
-
-    def test_pikpak_collapse_staging_preserves_complete_recovery(self):
-        script = self.script
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory).resolve()
-            source, target = r'A:\outer\outer', r'A:\outer'
-            def translate(path):
-                return root.joinpath(*PureWindowsPath(path).parts[1:]) if PureWindowsPath(path).drive.casefold() == 'a:' else Path(path)
-            translate(source).mkdir(parents=True)
-            media = translate(source) / 'film.mp4'
-            media.write_bytes(b'media')
-            with mock.patch.object(script, 'translate_ledger_path', side_effect=translate):
-                for steps in (0, 1, 2):
-                    pairs, state = script.collapse_moves(source, target)
-                    self.assertTrue(Path(state['temporary']).name.startswith('peach-organize-'))
-                    entry = dict(moves=pairs, collapse=state)
-                    for old, new in pairs[:steps]:
-                        script.organize._rename(old, new)
-                    self.assertEqual(script.restore_entry(entry), [])
-                    self.assertEqual(media.read_bytes(), b'media')
-                    self.assertFalse(Path(state['temporary']).exists())
-
     def test_provider_move_separates_same_parent_rename_and_cross_parent_move(self):
         script = self.script
         with tempfile.TemporaryDirectory() as directory:

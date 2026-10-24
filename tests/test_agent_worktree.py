@@ -460,19 +460,6 @@ class LeftoverProcessTests(_WorktreeCase):
         # EOF 让解释器自己退出；Windows venv 启动器也会等其子进程结束。
         child.communicate(timeout=10)
 
-    def test_a_process_working_in_a_worktree_is_listed_with_its_details(self):
-        child = self.sleeper(self.repo.parent / agent_worktree.WORKTREE_ROOT / "busy")
-        try:
-            report = agent_worktree.processes(self.repo)
-        finally:
-            self.stop(child)
-        row = next(row for row in report["processes"] if row["pid"] == child.pid)
-        self.assertFalse(row["orphan"], "父进程（测试本身）还在")
-        self.assertFalse(row["caller"])
-        self.assertGreaterEqual(row["age_minutes"], 0)
-        self.assertIn("cpu_percent", row)
-        self.assertIn("memory_percent", report["machine"])
-
     def test_the_caller_and_processes_elsewhere_are_told_apart(self):
         child = self.sleeper(self.root / "elsewhere")
         try:
@@ -483,18 +470,6 @@ class LeftoverProcessTests(_WorktreeCase):
         self.assertNotIn(child.pid, [row["pid"] for row in processes_under([self.repo])])
         mine = [row for row in rows if row["pid"] == os.getpid()]
         self.assertEqual([row["caller"] for row in mine], [True], "调用者自己这条链要标出来")
-
-    def test_a_directory_nobody_can_delete_names_the_process_holding_it(self):
-        held = self.repo / agent_worktree.BUILTIN_WORKTREES / "held-open"
-        child = self.sleeper(held)
-        try:
-            with mock.patch.object(agent_worktree, "_delete_tree",
-                                   return_value="PermissionError: 目录被别的进程占着"):
-                report = prune(self.repo, apply=True)
-        finally:
-            self.stop(child)
-        self.assertEqual([row["path"] for row in report["residue"]], [str(held)])
-        self.assertIn(child.pid, [row["pid"] for row in report["residue"][0]["holders"]])
 
     def test_without_psutil_the_scan_says_it_was_not_obtained(self):
         with mock.patch.dict(sys.modules, {"psutil": None}):

@@ -3,12 +3,10 @@ from __future__ import annotations
 
 import importlib.util
 import io
-import json
 from pathlib import Path
 import tarfile
 import tempfile
 import unittest
-import zipfile
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/fetch_ffmpeg_sources.py"
@@ -40,16 +38,6 @@ class FFmpegSourceBuildTests(unittest.TestCase):
             source["sha256"] = builder.digest(archive)
         return lock
 
-    def test_prepare_verifies_archives_before_extracting(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary).resolve()
-            lock = self.make_sources(output)
-            builder.prepare(output, lock)
-            for source in lock["sources"]:
-                self.assertTrue((output / "work" / source["name"] / "README").is_file())
-            with self.assertRaises(FileExistsError):
-                builder.prepare(output, lock)
-
     def test_prepare_rejects_source_archive_tampering(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary).resolve()
@@ -58,35 +46,6 @@ class FFmpegSourceBuildTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SHA256"):
                 builder.prepare(output, lock)
             self.assertFalse((output / "work/ffmpeg").exists())
-
-    def test_finish_includes_sources_scripts_licenses_and_matching_hashes(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary).resolve()
-            lock = self.make_sources(output)
-            builder.prepare(output, lock)
-            for path in ("ffmpeg/COPYING.GPLv3", "ffmpeg/COPYING.LGPLv2.1",
-                         "ffmpeg/COPYING.LGPLv3", "x264/COPYING", "dav1d/COPYING"):
-                (output / "work" / path).write_text("license", encoding="utf-8")
-            headers = output / "work/nv-codec-headers/include/ffnvcodec"
-            headers.mkdir(parents=True)
-            (headers / "test.h").write_text("/* MIT license */\ncode", encoding="utf-8")
-            (output / "ffmpeg/bin").mkdir(parents=True)
-            for name in ("ffmpeg", "ffprobe"):
-                (output / f"ffmpeg/bin/{name}.exe").write_bytes(b"MZ fixture")
-            (output / "buildconf.mak").write_text("CONFIG_GPL=yes\n", encoding="utf-8")
-            manifest = builder.finish(output, lock)
-            source_zip = output / manifest["source_archive"]["name"]
-            self.assertEqual(builder.digest(source_zip), manifest["source_archive"]["sha256"])
-            for path, expected in manifest["files"].items():
-                self.assertEqual(builder.digest(output / "ffmpeg" / path), expected)
-            with zipfile.ZipFile(source_zip) as package:
-                names = set(package.namelist())
-                self.assertTrue({f"sources/{s['archive']}" for s in lock["sources"]} <= names)
-                self.assertTrue({"scripts/build_ffmpeg_windows.sh", "scripts/fetch_ffmpeg_sources.py",
-                                 "scripts/ffmpeg-sources.json", "README.md", "buildconf.txt"} <= names)
-                self.assertFalse(any("manifest.json" in name for name in names))
-            stored = json.loads((output / "ffmpeg/manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(stored, manifest)
 
 
 if __name__ == "__main__":

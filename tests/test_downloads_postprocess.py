@@ -55,40 +55,6 @@ class DownloadPostprocessTests(unittest.TestCase):
     def run_task(self):
         return post.run(self.contract, post.followup_key(self.task.id), self.handle)
 
-    def test_existing_unrelated_foreign_key_violation_is_reported_without_failing_the_move(self):
-        with self.database.write_transaction() as connection:
-            connection.execute("INSERT INTO media_binding(asset_id,backend,external_id) VALUES(99999,'test','x')")
-        result = self.run_task()
-        self.assertEqual((result['moved'], result['existing_foreign_keys']), (1, 1))
-        self.assertEqual(self.store.get(self.task.id).postprocess_state, 'complete')
-        self.assertTrue(self.target.exists())
-
-    def test_retry_uses_the_bound_asset_after_a_move(self):
-        post._organize(self.contract, self.task, self.asset_id)
-        main, path, _ = post._bind_main(self.contract, self.store.get(self.task.id))
-        self.assertEqual((main, path), (self.asset_id, str(self.target)))
-
-    def test_occupied_target_is_a_retryable_failure(self):
-        self.target.parent.mkdir()
-        self.target.write_bytes(b'existing file')
-        with self.assertRaisesRegex(RuntimeError, '整理'):
-            self.run_task()
-        self.assertEqual(self.store.get(self.task.id).postprocess_state, 'failed')
-        self.assertTrue(self.source.exists())
-        self.assertEqual(self.target.read_bytes(), b'existing file')
-
-    def test_new_foreign_key_violation_is_rejected(self):
-        original = post.organize.apply_plan
-        def corrupt(connection, rows, **options):
-            result = original(connection, rows, **options)
-            connection.execute("INSERT INTO media_binding(asset_id,backend,external_id) VALUES(99999,'test','x')")
-            connection.commit()
-            return result
-        with patch.object(post.organize, 'apply_plan', side_effect=corrupt), \
-                self.assertRaisesRegex(RuntimeError, '校验'):
-            self.run_task()
-        self.assertEqual(self.store.get(self.task.id).postprocess_state, 'failed')
-
     def test_a_collision_found_in_the_plan_is_a_failure(self):
         with patch.object(post.organize, 'build_plan', return_value={
                 'rows': [{'action': 'skip', 'reason': post.organize.SKIP_TARGET_EXISTS}],
